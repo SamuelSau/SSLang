@@ -9,6 +9,7 @@ int main() {
   auto code =
       "x = 2\n"
       "// This is a comment.\n"
+      "// This is another comment.\n"
       "var x\n"
       "var y\n"
       "var f = function(x, y) { sin(x) * sin(y) + x * y; }\n"

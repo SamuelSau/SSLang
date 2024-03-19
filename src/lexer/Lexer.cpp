@@ -36,18 +36,16 @@ void Token::lexeme(std::string_view lexeme) noexcept {
     m_lexeme = std::move(lexeme);
 }
 
-Lexer::Lexer(const char* beg) noexcept : m_beg{beg} {}
-
 Token Lexer::atom(Token::Kind kind) noexcept { return Token(kind, m_beg++, 1); }
 
 Token Lexer::next() noexcept {
   while (is_space(peek())) get();
 
+  const char* token_start = m_beg;
+
   switch (peek()) {
     case '\0':
       return Token(Token::Kind::End, m_beg, 1);
-    default:
-      return atom(Token::Kind::Unexpected);
     case 'a':
     case 'b':
     case 'c':
@@ -154,6 +152,20 @@ Token Lexer::next() noexcept {
       return atom(Token::Kind::DoubleQuote);
     case '|':
       return atom(Token::Kind::Pipe);
+    default:
+      if (is_identifier_char(peek())) {
+                return identifier();
+            } else if (is_digit(peek())) {
+                return number();
+            } else if (!isprint(peek())) { // Check for non-printable characters
+                std::cerr << "Error: Unrecognized non-printable character encountered at position "
+                          << std::distance(m_original_beg, token_start) << ".\n";
+                return Token(Token::Kind::Unexpected, token_start, 1); // Use the original character position for error message
+            } else {
+                std::cerr << "Error: Unrecognized character '" << peek() << "' encountered at position "
+                          << std::distance(m_original_beg, token_start) << ".\n";
+                return Token(Token::Kind::Unexpected, token_start, 1); // Use the original character position for error message
+            }
   }
 }
 

@@ -37,7 +37,7 @@ private:
 
 class Lexer {
 public:
-    Lexer(const char* beg) noexcept;
+    Lexer(const char* beg) noexcept : m_beg{beg}, m_original_beg{beg} {} // Updated constructor
 
     Token next() noexcept;
 
@@ -50,6 +50,8 @@ private:
     char peek() const noexcept { return *m_beg; }
     char get() noexcept { return *m_beg++; }
     const char* m_beg = nullptr;
+    const char* m_original_beg = nullptr; // Added this line
+
 };
 
 bool is_space(char c) noexcept;
