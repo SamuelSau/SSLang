@@ -1,0 +1,60 @@
+# Standard C++ ignores
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.mod*
+*.cmd
+.tmp_versions/
+*.ko
+*.elf
+
+# Build directories
+build/
+out/
+Release/
+Debug/
+
+# CMake generated files/directories
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+!*.cmake.in
+
+# Vcpkg (if using vcpkg, you might keep vcpkg.json or vcpkg-configuration.json if used)
+/vcpkg
+/vcpkg_installed/
+!vcpkg.json
+!vcpkg-configuration.json
+
+# IDEs and editors
+.vs/
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+
+# Ignore user-specific files like CMake user presets
+CMakeUserPresets.json
+
+# If using Doxygen
+doxygen/html/
+
+# If there are any specific files or directories created by your tools or IDEs, consider adding them as well.
