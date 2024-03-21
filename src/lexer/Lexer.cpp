@@ -1,9 +1,12 @@
 #include <string>
-#include "lexer/Lexer.h"
 #include <cstddef>
 #include <iterator>
 #include <iostream>
 #include <iomanip>
+#include <string_view>
+#include <unordered_map>
+
+#include "lexer/Lexer.h"
 
 Token::Token(Kind kind) noexcept : m_kind{kind} {}
 
@@ -44,72 +47,14 @@ Token Lexer::next() noexcept {
   const char* token_start = m_beg;
 
   switch (peek()) {
+    if (std::isdigit(peek())) {
+      return number();
+    }
+    if (std::isalpha(peek())) {
+      return identifier();
+    }
     case '\0':
       return Token(Token::Kind::End, m_beg, 1);
-    case 'a':
-    case 'b':
-    case 'c':
-    case 'd':
-    case 'e':
-    case 'f':
-    case 'g':
-    case 'h':
-    case 'i':
-    case 'j':
-    case 'k':
-    case 'l':
-    case 'm':
-    case 'n':
-    case 'o':
-    case 'p':
-    case 'q':
-    case 'r':
-    case 's':
-    case 't':
-    case 'u':
-    case 'v':
-    case 'w':
-    case 'x':
-    case 'y':
-    case 'z':
-    case 'A':
-    case 'B':
-    case 'C':
-    case 'D':
-    case 'E':
-    case 'F':
-    case 'G':
-    case 'H':
-    case 'I':
-    case 'J':
-    case 'K':
-    case 'L':
-    case 'M':
-    case 'N':
-    case 'O':
-    case 'P':
-    case 'Q':
-    case 'R':
-    case 'S':
-    case 'T':
-    case 'U':
-    case 'V':
-    case 'W':
-    case 'X':
-    case 'Y':
-    case 'Z':
-      return identifier();
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-      return number();
     case '(':
       return atom(Token::Kind::LeftParen);
     case ')':
@@ -131,6 +76,10 @@ Token Lexer::next() noexcept {
     case '+':
       return atom(Token::Kind::Plus);
     case '-':
+       if (std::next(m_beg) != '\0' && *std::next(m_beg) == '>') {
+                m_beg += 2; // Advance past "->"
+                return Token(Token::Kind::Arrow, token_start, m_beg);
+          }
       return atom(Token::Kind::Minus);
     case '*':
       return atom(Token::Kind::Asterisk);
@@ -152,29 +101,52 @@ Token Lexer::next() noexcept {
       return atom(Token::Kind::DoubleQuote);
     case '|':
       return atom(Token::Kind::Pipe);
+    case '!':
+      return atom(Token::Kind::Not);
     default:
       if (is_identifier_char(peek())) {
-                return identifier();
-            } else if (is_digit(peek())) {
-                return number();
-            } else if (!isprint(peek())) { // Check for non-printable characters
-                std::cerr << "Error: Unrecognized non-printable character encountered at position "
-                          << std::distance(m_original_beg, token_start) << ".\n";
-                return Token(Token::Kind::Unexpected, token_start, 1); // Use the original character position for error message
-            } else {
-                std::cerr << "Error: Unrecognized character '" << peek() << "' encountered at position "
-                          << std::distance(m_original_beg, token_start) << ".\n";
-                return Token(Token::Kind::Unexpected, token_start, 1); // Use the original character position for error message
-            }
+            return identifier();
+            } 
+      else if (is_digit(peek())) {
+            return number();
+            }       
+      else if (!isprint(peek())) { // Check for non-printable characters
+            std::cerr << "Error: Unrecognized non-printable character encountered at position " << std::distance(m_original_beg, token_start) << ".\n";
+            return Token(Token::Kind::Unexpected, token_start, 1); // Use the original character position for error message
+            } 
+     else {
+            std::cerr << "Error: Unrecognized character '" << peek() << "' encountered at position " << std::distance(m_original_beg, token_start) << ".\n";
+            return Token(Token::Kind::Unexpected, token_start, 1); // Use the original character position for error message
+          }
   }
 }
 
 Token Lexer::identifier() noexcept {
-  const char* start = m_beg;
-  get();
-  while (is_identifier_char(peek())) get();
-  return Token(Token::Kind::Identifier, start, m_beg);
-}
+   const char* start = m_beg;
+    while (is_identifier_char(peek())) get();
+    
+    // Example keyword checking, needs to be expanded based on actual language keywords
+    std::string_view text(start, std::distance(start, m_beg));
+    static const std::unordered_map<std::string_view, Token::Kind> keywords = {
+        {"function", Token::Kind::Function},
+        {"if", Token::Kind::If},
+        {"else", Token::Kind::Else},
+        {"while", Token::Kind::While},
+        {"return", Token::Kind::Return},
+        {"for", Token::Kind::For},
+        {"int", Token::Kind::Int},
+        {"float", Token::Kind::Float},
+        {"string", Token::Kind::String},
+        {"bool", Token::Kind::Bool},
+    };
+
+    auto keyword = keywords.find(text);
+    if (keyword != keywords.end()) {
+        return Token(keyword->second, start, std::distance(start, m_beg));
+    }
+    return Token(Token::Kind::Identifier, start, std::distance(start, m_beg));
+ }
+
 
 Token Lexer::number() noexcept {
   const char* start = m_beg;
@@ -214,94 +186,27 @@ bool is_space(char c) noexcept {
 }
 
 bool is_digit(char c) noexcept {
-  switch (c) {
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-      return true;
-    default:
-      return false;
+  bool result = false;
+
+  if (c >= '0' && c <= '9') {
+    result = true;
   }
+  return result;
 }
 
 bool is_identifier_char(char c) noexcept {
-  switch (c) {
-    case 'a':
-    case 'b':
-    case 'c':
-    case 'd':
-    case 'e':
-    case 'f':
-    case 'g':
-    case 'h':
-    case 'i':
-    case 'j':
-    case 'k':
-    case 'l':
-    case 'm':
-    case 'n':
-    case 'o':
-    case 'p':
-    case 'q':
-    case 'r':
-    case 's':
-    case 't':
-    case 'u':
-    case 'v':
-    case 'w':
-    case 'x':
-    case 'y':
-    case 'z':
-    case 'A':
-    case 'B':
-    case 'C':
-    case 'D':
-    case 'E':
-    case 'F':
-    case 'G':
-    case 'H':
-    case 'I':
-    case 'J':
-    case 'K':
-    case 'L':
-    case 'M':
-    case 'N':
-    case 'O':
-    case 'P':
-    case 'Q':
-    case 'R':
-    case 'S':
-    case 'T':
-    case 'U':
-    case 'V':
-    case 'W':
-    case 'X':
-    case 'Y':
-    case 'Z':
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-    case '_':
-      return true;
-    default:
-      return false;
+  bool result = false;
+  if (c >= 'a' && c <= 'z') {
+    result = true;
+  } else if (c >= 'A' && c <= 'Z') {
+    result = true;
+  } else if (c == '_') {
+    result = true;
   }
+  return result;
 }
 
+//order matters in enum class
 std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
   static const char* const names[]{
       "Number",      "Identifier",  "LeftParen",  "RightParen", "LeftSquare",
@@ -309,7 +214,9 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
       "Equal",       "Plus",        "Minus",      "Asterisk",   "Slash",
       "Hash",        "Dot",         "Comma",      "Colon",      "Semicolon",
       "SingleQuote", "DoubleQuote", "Comment",    "Pipe",       "End",
-      "Unexpected",
+      "Unexpected",  "Function",    "If",         "Else",       "While", 
+      "Return",      "For",         "Int",        "Float",      "String", 
+      "Bool",        "Not",         "Arrow"
   };
   return os << names[static_cast<int>(kind)];
 }

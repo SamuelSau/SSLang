@@ -11,9 +11,11 @@ public:
         Number, Identifier, LeftParen, RightParen, LeftSquare, RightSquare,
         LeftCurly, RightCurly, LessThan, GreaterThan, Equal, Plus, Minus,
         Asterisk, Slash, Hash, Dot, Comma, Colon, Semicolon, SingleQuote,
-        DoubleQuote, Comment, Pipe, End, Unexpected,
+        DoubleQuote, Comment, Pipe, End, Unexpected, Function, If, Else,
+        While, Return, For, Int, Float, String, Bool, Not, Arrow
     };
 
+    Token() noexcept : m_kind{Kind::End}, m_lexeme{""} {} //default constructor
     Token(Kind kind) noexcept;
     Token(Kind kind, const char* beg, std::size_t len) noexcept;
     Token(Kind kind, const char* beg, const char* end) noexcept;
@@ -37,8 +39,7 @@ private:
 
 class Lexer {
 public:
-    Lexer(const char* beg) noexcept : m_beg{beg}, m_original_beg{beg} {} // Updated constructor
-
+    Lexer(const char* beg) noexcept : m_beg{beg}, m_original_beg{beg} {}
     Token next() noexcept;
 
 private:
@@ -46,12 +47,12 @@ private:
     Token number() noexcept;
     Token slash_or_comment() noexcept;
     Token atom(Token::Kind) noexcept;
-
+    
     char peek() const noexcept { return *m_beg; }
     char get() noexcept { return *m_beg++; }
+
     const char* m_beg = nullptr;
     const char* m_original_beg = nullptr; // Added this line
-
 };
 
 bool is_space(char c) noexcept;

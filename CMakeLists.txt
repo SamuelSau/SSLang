@@ -13,5 +13,15 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src
     )
 
-# Add Executable
-add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp)
+# Main Executable
+add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
+
+# Test Executable
+add_executable(SSLangTests tests/test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
+
+# Custom target for running tests
+add_custom_target(run_tests
+    COMMAND SSLangTests
+    DEPENDS SSLangTests
+    WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
+)
