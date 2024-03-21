@@ -1,0 +1,8 @@
+str x = "Hello World";
+str y = "";
+str z = "This is crazy!?!?!?!";
+string a = "abc";
+str b = ";
+str c = ;
+str "what is this";
+str d = '';

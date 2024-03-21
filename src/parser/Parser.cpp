@@ -5,7 +5,6 @@
 #include "parser/Parser.h"
 
 bool Parser::atEnd() const {
-    std::cout << "Checking if at end" << std::endl;
     return currentToken.is(Token::Kind::End);
 }
 
@@ -26,9 +25,15 @@ void Parser::consume(Token::Kind kind, const std::string& errorMessage) {
 std::unique_ptr<Declaration> Parser::parseDeclaration() {
     if (currentToken.is(Token::Kind::Int)) {
         return parseIntDeclaration();
+    }
+    else if (currentToken.is(Token::Kind::Float)) {
+        return parseFloatDeclaration();
+    }
+    else if (currentToken.is(Token::Kind::String)) {
+        return parseStringDeclaration();
     } 
      else {
-        throw std::runtime_error("Expected declaration type.");
+        throw std::runtime_error("Expected declaration type of either int, float, or string.");
     }
 }
 

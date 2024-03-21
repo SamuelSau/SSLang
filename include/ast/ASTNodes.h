@@ -44,6 +44,14 @@ public:
         : name(std::move(name)), number(std::move(number)) {}
 };
 
+class StringDeclaration : public Declaration {
+public:
+    std::string name;
+    std::string value;
+    StringDeclaration(std::string name, std::string value)
+        : name(std::move(name)), value(std::move(value)) {}
+};
+
 class FunctionDefinition : public Declaration {
 public:
     std::string name;

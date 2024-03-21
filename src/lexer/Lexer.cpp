@@ -98,7 +98,7 @@ Token Lexer::next() noexcept {
     case '\'':
       return atom(Token::Kind::SingleQuote);
     case '"':
-      return atom(Token::Kind::DoubleQuote);
+      return string_literal();
     case '|':
       return atom(Token::Kind::Pipe);
     case '!':
@@ -132,11 +132,11 @@ Token Lexer::identifier() noexcept {
         {"if", Token::Kind::If},
         {"else", Token::Kind::Else},
         {"while", Token::Kind::While},
-        {"return", Token::Kind::Return},
+        {"ret", Token::Kind::Return},
         {"for", Token::Kind::For},
         {"int", Token::Kind::Int},
-        {"float", Token::Kind::Float},
-        {"string", Token::Kind::String},
+        {"flt", Token::Kind::Float},
+        {"str", Token::Kind::String},
         {"bool", Token::Kind::Bool},
     };
 
@@ -152,7 +152,20 @@ Token Lexer::number() noexcept {
   const char* start = m_beg;
   get();
   while (is_digit(peek())) get();
-  return Token(Token::Kind::Number, start, m_beg);
+  bool isFloat = false;
+    if (peek() == '.') {
+        isFloat = true;
+        get(); // Consume the '.'
+        while (std::isdigit(peek())) get(); // Consume the fractional part
+    }
+
+    if (isFloat) {
+        // We have a floating-point number
+        return Token(Token::Kind::FloatLiteral, start, std::distance(start, m_beg));
+    } else {
+        // It's an integer
+        return Token(Token::Kind::Number, start, std::distance(start, m_beg));
+    }
 }
 
 Token Lexer::slash_or_comment() noexcept {
@@ -172,6 +185,30 @@ Token Lexer::slash_or_comment() noexcept {
     return Token(Token::Kind::Slash, start, 1);
   }
 }
+
+Token Lexer::string_literal() noexcept {
+    const char* start = ++m_beg; // Skip the initial double-quote
+
+    while (*m_beg != '"' && *m_beg != '\0') {
+        // Handle escaped characters if your language syntax supports them
+        if (*m_beg == '\\' && *(m_beg + 1) == '"') {
+            m_beg++; // Skip the escape character
+        }
+        m_beg++;
+    }
+
+    if (*m_beg == '"') {
+        // Create a StringLiteral token from the contents between the quotes
+        Token token(Token::Kind::StringLiteral, start, m_beg);
+        m_beg++; // Skip the closing double-quote
+        return token;
+    } else {
+        // Handle the error case (e.g., EOF before closing quote)
+        // This could return an Unexpected token or similar error token
+        return Token(Token::Kind::Unexpected, start, m_beg);
+    }
+}
+
 
 bool is_space(char c) noexcept {
   switch (c) {
@@ -216,7 +253,7 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
       "SingleQuote", "DoubleQuote", "Comment",    "Pipe",       "End",
       "Unexpected",  "Function",    "If",         "Else",       "While", 
       "Return",      "For",         "Int",        "Float",      "String", 
-      "Bool",        "Not",         "Arrow"
+      "Bool",        "Not",         "Arrow",      "StringLiteral", "FloatLiteral"
   };
   return os << names[static_cast<int>(kind)];
 }

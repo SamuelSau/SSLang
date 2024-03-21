@@ -12,7 +12,8 @@ public:
         LeftCurly, RightCurly, LessThan, GreaterThan, Equal, Plus, Minus,
         Asterisk, Slash, Hash, Dot, Comma, Colon, Semicolon, SingleQuote,
         DoubleQuote, Comment, Pipe, End, Unexpected, Function, If, Else,
-        While, Return, For, Int, Float, String, Bool, Not, Arrow
+        While, Return, For, Int, Float, String, Bool, Not, Arrow, StringLiteral,
+        FloatLiteral
     };
 
     Token() noexcept : m_kind{Kind::End}, m_lexeme{""} {} //default constructor
@@ -46,6 +47,7 @@ private:
     Token identifier() noexcept;
     Token number() noexcept;
     Token slash_or_comment() noexcept;
+    Token string_literal() noexcept;
     Token atom(Token::Kind) noexcept;
     
     char peek() const noexcept { return *m_beg; }

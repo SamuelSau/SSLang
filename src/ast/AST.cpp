@@ -23,13 +23,61 @@ std::unique_ptr<IntDeclaration> Parser::parseIntDeclaration() {
         throw std::runtime_error("Expected number after '=' in variable declaration.");
     }
     std::string number = std::string(currentToken.lexeme());
-    consume(Token::Kind::Number, "Expected number after '='.");
+    consume(Token::Kind::Number, "Expected integer after '='.");
 
     consume(Token::Kind::Semicolon, "Expected ';' after variable declaration.");
     
-    std::cout << "Parsed int declaration: " << name << " = " << number << std::endl;
-
     return std::make_unique<IntDeclaration>(name, number);
+}
+
+std::unique_ptr<FloatDeclaration> Parser::parseFloatDeclaration() {
+    consume(Token::Kind::Float, "Expected 'flt' for this declaration.");
+    
+    if (!currentToken.is(Token::Kind::Identifier)) {
+        throw std::runtime_error("Expected variable name after 'flt'.");
+    }
+
+    std::string name = std::string(currentToken.lexeme());
+    consume(Token::Kind::Identifier, "Expected identifier after 'float'.");
+
+    consume(Token::Kind::Equal, "Expected '=' after variable name.");
+    
+    if (!currentToken.is(Token::Kind::FloatLiteral)) {
+        throw std::runtime_error("Expected floating-point number after '=' in variable declaration.");
+    }
+    
+    std::string number = std::string(currentToken.lexeme());
+    consume(Token::Kind::FloatLiteral, "Expected floating-point number after '='."); // Corrected line
+
+    consume(Token::Kind::Semicolon, "Expected ';' after variable declaration.");
+    
+    return std::make_unique<FloatDeclaration>(name, number);
+}
+
+
+std::unique_ptr<StringDeclaration> Parser::parseStringDeclaration(){
+    consume(Token::Kind::String, "Expected 'str' for this declaration.");
+
+    if (!currentToken.is(Token::Kind::Identifier)) {
+        throw std::runtime_error("Expected variable name after 'str'.");
+    }
+    std::string name = std::string(currentToken.lexeme());
+    consume(Token::Kind::Identifier, "Expected identifier after 'str'.");
+
+    consume(Token::Kind::Equal, "Expected '=' after variable name.");
+    
+    if (!currentToken.is(Token::Kind::StringLiteral)) {
+        throw std::runtime_error("Expected str after '=' in variable declaration.");
+    }
+    std::string value = std::string(currentToken.lexeme());
+    consume(Token::Kind::StringLiteral, "Expected a string literal after '='.");
+
+    consume(Token::Kind::Semicolon, "Expected ';' after variable declaration.");
+    
+    std::cout << "Parsed string declaration: " << name << " = " << value << std::endl;
+
+    return std::make_unique<StringDeclaration>(name, value);
+
 }
 
 // std::unique_ptr<FunctionDefinition> Parser::parseFunctionDefinition() {

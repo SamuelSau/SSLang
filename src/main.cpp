@@ -9,7 +9,7 @@
 
 int main() {
   auto code =
-    "int x = 2;";
+  "str x = \"Hello World\";";
 
   Lexer lex(code);
   // for (auto token = lex.next(); !token.is_one_of(Token::Kind::End, Token::Kind::Unexpected); token = lex.next()) {
@@ -17,6 +17,7 @@ int main() {
   // }
   Parser parser(lex);
 
+  //simply testing the parser with declarations
   auto declaration = parser.parseDeclaration();
 
 //   try {
