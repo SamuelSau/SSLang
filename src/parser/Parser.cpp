@@ -1,15 +1,22 @@
 #include <stdexcept>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include "parser/Parser.h"
+
 
 bool Parser::atEnd() const {
     return currentToken.is(Token::Kind::End);
 }
 
 void Parser::advance() {
-    currentToken = lexer.next();
+   if (nextToken.kind() == Token::Kind::Uninitialized) { // Assume such a kind exists for demonstration
+        nextToken = lexer.next(); // Ensure nextToken has initial value
+    }
+    currentToken = std::move(nextToken); // Safely move now that nextToken is guaranteed to have been loaded
+    nextToken = lexer.next(); // Preload the next token
 }
 
 void Parser::consume(Token::Kind kind, const std::string& errorMessage) {
@@ -21,6 +28,11 @@ void Parser::consume(Token::Kind kind, const std::string& errorMessage) {
     
     }
 }
+
+const Token& Parser::peekToken() const {
+    return nextToken;
+}
+
 //Declaration parsing
 std::unique_ptr<Declaration> Parser::parseDeclaration() {
     if (currentToken.is(Token::Kind::Int)) {
@@ -37,24 +49,27 @@ std::unique_ptr<Declaration> Parser::parseDeclaration() {
     }
 }
 
-//Expression parsing
 std::unique_ptr<Expression> Parser::parseExpression() {
-    if (currentToken.is(Token::Kind::Identifier)) {
-        return parseAssignment();
-    }
-    else if (currentToken.is(Token::Kind::Number) || currentToken.is(Token::Kind::FloatLiteral) || currentToken.is(Token::Kind::StringLiteral)) {
-        return parsePrimary();
-    }
+    std::unique_ptr<Expression> leftExp;
+
+    // Start with unary or primary expressions
+    if (currentToken.is(Token::Kind::Identifier) && peekToken().is(Token::Kind::Equal)) {
+            leftExp = parseAssignment(); 
+    } 
     else if (currentToken.is(Token::Kind::Minus) || currentToken.is(Token::Kind::Not)) {
-        return parseUnary();
-    }
-    else if (currentToken.is(Token::Kind::LeftParen)) {
-        return parseBinary();
+        // Definitely a unary operation
+        leftExp = parseUnary();
+    } 
+    else if (currentToken.is(Token::Kind::Identifier) &&  (peekToken().is(Token::Kind::Plus) || peekToken().is(Token::Kind::Minus) || peekToken().is(Token::Kind::Asterisk) || peekToken().is(Token::Kind::Slash))) {
+        leftExp = parseBinary();
     }
     else {
-        throw std::runtime_error("Expected expression type of either assignment, unary, or binary.");
+        // Default to primary for numbers, literals, etc.
+        leftExp = parsePrimary();
     }
+    return leftExp;
 }
+
 
 //Statement parsing
 

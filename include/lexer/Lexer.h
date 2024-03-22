@@ -13,7 +13,7 @@ public:
         Asterisk, Slash, Hash, Dot, Comma, Colon, Semicolon, SingleQuote,
         DoubleQuote, Comment, Pipe, End, Unexpected, Function, If, Else,
         While, Return, For, Int, Float, String, Bool, Arrow, StringLiteral,
-        FloatLiteral, Log, Not, Equals, NotEquals, Or, And,
+        FloatLiteral, Log, Not, Equals, NotEquals, Or, And, Uninitialized
     };
 
     Token() noexcept : m_kind{Kind::End}, m_lexeme{""} {} //default constructor
@@ -28,7 +28,9 @@ public:
     bool is_one_of(Kind k1, Kind k2) const noexcept;
 
     template <typename... Ts>
-    bool is_one_of(Kind k1, Kind k2, Ts... ks) const noexcept;
+    bool is_one_of(Kind k1, Kind k2, Ts... ks) const noexcept {
+    return is(k1) || is_one_of(k2, ks...);
+    }
 
     std::string_view lexeme() const noexcept;
     void lexeme(std::string_view lexeme) noexcept;
@@ -36,6 +38,10 @@ public:
 private:
     Kind m_kind{};
     std::string_view m_lexeme{};
+
+    bool is_one_of() const noexcept {
+        return false;
+    }
 };
 
 class Lexer {

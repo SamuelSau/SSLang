@@ -26,11 +26,6 @@ bool Token::is_not(Kind kind) const noexcept { return m_kind != kind; }
 
 bool Token::is_one_of(Kind k1, Kind k2) const noexcept { return is(k1) || is(k2); }
 
-template <typename... Ts>
-bool Token::is_one_of(Kind k1, Kind k2, Ts... ks) const noexcept {
-    return is(k1) || is_one_of(k2, ks...);
-}
-
 std::string_view Token::lexeme() const noexcept {
     return m_lexeme;
 }
@@ -259,6 +254,7 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
       "Return",      "For",         "Int",        "Float",      "String", 
       "Bool",        "Arrow",      "StringLiteral", "FloatLiteral",
       "Log",         "Not",         "Equals",     "NotEquals",  "Or", "And",
+      "Uninitialized"
   };
   return os << names[static_cast<int>(kind)];
 }

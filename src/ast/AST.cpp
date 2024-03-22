@@ -80,7 +80,6 @@ std::unique_ptr<StringDeclaration> Parser::parseStringDeclaration(){
 
 }
 //Parsing expressions
-
 std::unique_ptr<Expression> Parser::parseAssignment() {
     // Example: Parsing "x = 5;"
     if (currentToken.is(Token::Kind::Identifier)) {
@@ -90,6 +89,7 @@ std::unique_ptr<Expression> Parser::parseAssignment() {
         if (currentToken.is(Token::Kind::Equal)) {
             consume(Token::Kind::Equal, "Expected an = after identifier"); // Consume the '=' operator
             auto right = parseExpression(); // Recursively parse the right-hand side expression
+            consume(Token::Kind::Semicolon, "Expected ';' after expression");
 
             // Create an AssignmentExpression with the variable name and the expression
             return std::make_unique<AssignmentExpression>(std::move(variableName), std::move(right));
@@ -165,35 +165,36 @@ std::unique_ptr<Expression> Parser::parseUnary() {
 }
 
 std::unique_ptr<Expression> Parser::parseBinary() {
-    auto left = parseUnary(); // Start with higher precedence expressions
-    while (currentToken.is(Token::Kind::And) || currentToken.is(Token::Kind::Or) || currentToken.is(Token::Kind::Plus) || currentToken.is(Token::Kind::Minus) || currentToken.is(Token::Kind::Asterisk) || currentToken.is(Token::Kind::Slash)) { // Pseudocode for operator check
-        std::string op(1, currentToken.lexeme()[0]);
-        consume(currentToken.kind(), "Expected a certain operator token"); // Move to the next token
-        auto right = parseUnary();
-        left = std::make_unique<BinaryExpression>(std::move(left), std::move(right), op);
+    auto left = parseUnary(); // Start with the highest precedence expressions
+
+        // Check if a binary operation follows
+    if (currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash)) {
+        std::string op = std::string(currentToken.lexeme());
+        consume(currentToken.kind(), "Expected an operator");
+        auto right = parseUnary(); // Assume only one binary operation is allowed
+        return std::make_unique<BinaryExpression>(std::move(left), std::move(right), op);
     }
-    return left;
+
+    return left; // If no binary operation, return the primary expression
 }
+
 
 std::unique_ptr<Expression> Parser::parsePrimary() {
 
     if (currentToken.is(Token::Kind::Identifier)) {
         auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
         consume(Token::Kind::Identifier, "Expected identifier.");
-        consume(Token::Kind::Semicolon, "Expected ';' after identifier.");
         return expr;
     }
     else if (currentToken.is(Token::Kind::Number)) {
         auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
         consume(Token::Kind::Number, "Expected number.");
-        consume(Token::Kind::Semicolon, "Expected ';' after identifier.");
         return expr;
     }
 
     else if (currentToken.is(Token::Kind::FloatLiteral)) {
         auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
         consume(Token::Kind::FloatLiteral, "Expected string literal.");
-        consume(Token::Kind::Semicolon, "Expected ';' after identifier.");
         return expr;
     }
     else {

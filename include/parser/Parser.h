@@ -6,7 +6,8 @@
 #include <vector>
 #include <optional> 
 #include <iostream>
-
+#include <string>
+#include <unordered_map>
 
 #include "lexer/Lexer.h"
 #include "ast/ASTNodes.h"
@@ -18,9 +19,11 @@ public:
     }
     Lexer& lexer;
     Token currentToken;
+    Token nextToken = Token(Token::Kind::Uninitialized); 
     bool atEnd() const;
     void advance();
     void consume(Token::Kind kind, const std::string& errorMessage);
+    const Token& peekToken() const;
 
     //Declaration parsing
     std::unique_ptr<Declaration> parseDeclaration(); 
@@ -29,7 +32,7 @@ public:
     std::unique_ptr<StringDeclaration> parseStringDeclaration(); //str x = "hello";
 
     // Expression parsing
-    std::unique_ptr<Expression> parseExpression();
+    std::unique_ptr<Expression> parseExpression(); 
     std::unique_ptr<Expression> parseAssignment(); //x = 5 (where x is already declared)
     std::unique_ptr<Expression> parseLogicOr(); //x or y
     std::unique_ptr<Expression> parseLogicAnd(); //x and y
