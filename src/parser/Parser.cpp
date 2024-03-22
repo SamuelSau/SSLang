@@ -38,8 +38,22 @@ std::unique_ptr<Declaration> Parser::parseDeclaration() {
 }
 
 //Expression parsing
-std::unique_ptr<Expression> Parser::parseExpression() {  
-    return parseAssignment();
+std::unique_ptr<Expression> Parser::parseExpression() {
+    if (currentToken.is(Token::Kind::Identifier)) {
+        return parseAssignment();
+    }
+    else if (currentToken.is(Token::Kind::Number) || currentToken.is(Token::Kind::FloatLiteral) || currentToken.is(Token::Kind::StringLiteral)) {
+        return parsePrimary();
+    }
+    else if (currentToken.is(Token::Kind::Minus) || currentToken.is(Token::Kind::Not)) {
+        return parseUnary();
+    }
+    else if (currentToken.is(Token::Kind::LeftParen)) {
+        return parseBinary();
+    }
+    else {
+        throw std::runtime_error("Expected expression type of either assignment, unary, or binary.");
+    }
 }
 
 //Statement parsing
