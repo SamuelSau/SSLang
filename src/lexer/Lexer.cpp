@@ -77,7 +77,7 @@ Token Lexer::next() noexcept {
       return atom(Token::Kind::Plus);
     case '-':
        if (std::next(m_beg) != '\0' && *std::next(m_beg) == '>') {
-                m_beg += 2; // Advance past "->"
+                m_beg += 2; // 
                 return Token(Token::Kind::Arrow, token_start, m_beg);
           }
       return atom(Token::Kind::Minus);
@@ -101,8 +101,6 @@ Token Lexer::next() noexcept {
       return string_literal();
     case '|':
       return atom(Token::Kind::Pipe);
-    case '!':
-      return atom(Token::Kind::Not);
     default:
       if (is_identifier_char(peek())) {
             return identifier();
@@ -138,6 +136,12 @@ Token Lexer::identifier() noexcept {
         {"flt", Token::Kind::Float},
         {"str", Token::Kind::String},
         {"bool", Token::Kind::Bool},
+        {"log", Token::Kind::Log},
+        {"not", Token::Kind::Not},
+        {"equals", Token::Kind::Equals},
+        {"notEquals", Token::Kind::NotEquals},
+        {"or", Token::Kind::Or},
+        {"and", Token::Kind::And},
     };
 
     auto keyword = keywords.find(text);
@@ -253,7 +257,8 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
       "SingleQuote", "DoubleQuote", "Comment",    "Pipe",       "End",
       "Unexpected",  "Function",    "If",         "Else",       "While", 
       "Return",      "For",         "Int",        "Float",      "String", 
-      "Bool",        "Not",         "Arrow",      "StringLiteral", "FloatLiteral"
+      "Bool",        "Arrow",      "StringLiteral", "FloatLiteral",
+      "Log",         "Not",         "Equals",     "NotEquals",  "Or", "And",
   };
   return os << names[static_cast<int>(kind)];
 }

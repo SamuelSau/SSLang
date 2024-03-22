@@ -21,7 +21,7 @@ void Parser::consume(Token::Kind kind, const std::string& errorMessage) {
     
     }
 }
-
+//Declaration parsing
 std::unique_ptr<Declaration> Parser::parseDeclaration() {
     if (currentToken.is(Token::Kind::Int)) {
         return parseIntDeclaration();
@@ -36,6 +36,37 @@ std::unique_ptr<Declaration> Parser::parseDeclaration() {
         throw std::runtime_error("Expected declaration type of either int, float, or string.");
     }
 }
+
+//Expression parsing
+std::unique_ptr<Expression> Parser::parseExpression() {  
+    return parseAssignment();
+}
+
+//Statement parsing
+
+// std::unique_ptr<Statement> Parser::parseStatement() {
+//     if (currentToken.is(Token::Kind::Identifier)) {
+//         return parseAssignmentStatement();
+//     }
+//     else if (currentToken.is(Token::Kind::Log)) {
+//         return parsePrintStatement();
+//     }
+//     else if (currentToken.is(Token::Kind::For)) {
+//         return parseForStatement();
+//     }
+//     else if (currentToken.is(Token::Kind::If)) {
+//         return parseIfStatement();
+//     }
+//     else if (currentToken.is(Token::Kind::While)) {
+//         return parseWhileStatement();
+//     }
+//     else if (currentToken.is(Token::Kind::Return)) {
+//         return parseReturnStatement();
+//     }
+//     else {
+//         throw std::runtime_error("Expected statement type of either assignment, print, for, if, while, or return.");
+//     }
+// }
 
 // std::unique_ptr<FunctionDefinition> Parser::parseFunctionDefinition() {
 //     return nullptr; // Placeholder

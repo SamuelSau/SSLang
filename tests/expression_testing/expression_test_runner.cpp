@@ -16,7 +16,8 @@ void runTestForLine(const std::string& line, int lineNumber, const std::string& 
     std::string filename = testPath.filename().string();
 
     try {
-        auto declaration = parser.parseDeclaration();
+        auto expression = parser.parseExpression();
+        std:: cout << expression->toString() << std::endl;
         std::cout << "Test passed: Line " << lineNumber << " in " << filename << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Test failed: Line " << lineNumber << " in " << filename << " with error: " << e.what() << std::endl;
@@ -43,9 +44,7 @@ void runTestsInFile(const std::string& filePath) {
 int main() {
     // List of test files
     std::vector<std::string> testFiles = {
-        "../../../../tests/test_int_declarations.ssl",
-        "../../../../tests/test_float_declarations.ssl",
-        "../../../../tests/test_string_declarations.ssl",
+        "../../../../tests/expression_testing/test_assignment_expression.ssl",
     };
 
     for (const auto& filePath : testFiles) {

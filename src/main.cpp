@@ -9,7 +9,7 @@
 
 int main() {
   auto code =
-  "str x = \"Hello World\";";
+  "x = 5;";
 
   Lexer lex(code);
   // for (auto token = lex.next(); !token.is_one_of(Token::Kind::End, Token::Kind::Unexpected); token = lex.next()) {
@@ -18,8 +18,10 @@ int main() {
   Parser parser(lex);
 
   //simply testing the parser with declarations
-  auto declaration = parser.parseDeclaration();
-
+  //auto declaration = parser.parseDeclaration();
+  auto expression = parser.parseExpression();
+  std::cout << expression->toString() << std::endl;
+  //auto statement = parser.parseStatement();
 //   try {
 //     auto program = parser.parseProgram();
 //     program->print(std::cout);

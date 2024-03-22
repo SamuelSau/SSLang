@@ -79,6 +79,131 @@ std::unique_ptr<StringDeclaration> Parser::parseStringDeclaration(){
     return std::make_unique<StringDeclaration>(name, value);
 
 }
+//Parsing expressions
+
+std::unique_ptr<Expression> Parser::parseAssignment() {
+    // Example: Parsing "x = 5;"
+    if (currentToken.is(Token::Kind::Identifier)) {
+        std::string variableName = std::string(currentToken.lexeme()); // Capture the variable name
+        consume(Token::Kind::Identifier, "Expected an identifier"); // Move past the identifier
+
+        if (currentToken.is(Token::Kind::Equal)) {
+            consume(Token::Kind::Equal, "Expected an = after identifier"); // Consume the '=' operator
+            auto right = parseExpression(); // Recursively parse the right-hand side expression
+
+            // Create an AssignmentExpression with the variable name and the expression
+            return std::make_unique<AssignmentExpression>(std::move(variableName), std::move(right));
+        } else {
+            // Error handling for missing '=' in an assignment
+            throw std::runtime_error("Expected '=' in assignment");
+        }
+    }
+    if (currentToken.is(Token::Kind::Number) || currentToken.is(Token::Kind::FloatLiteral) || currentToken.is(Token::Kind::StringLiteral)) {
+        return parsePrimary();
+    }
+    // If the left side isn't an identifier, handle according to your language's syntax rules
+    // This might be an error, or you might have other forms of expressions that are valid here
+    throw std::runtime_error("Expected an identifier in assignment");
+}
+
+std::unique_ptr<Expression> Parser::parseLogicOr() {
+    return nullptr;
+}
+
+std::unique_ptr<Expression> Parser::parseLogicAnd() {
+    return nullptr;
+}
+
+std::unique_ptr<Expression> Parser::parseEquality() {
+    return nullptr;
+
+}
+
+std::unique_ptr<Expression> Parser::parseComparison() {
+    return nullptr;
+
+}
+
+std::unique_ptr<Expression> Parser::parseTerm() {
+    auto expr = parseFactor();
+    while (currentToken.is(Token::Kind::Plus) || currentToken.is(Token::Kind::Minus)) {
+        char op = currentToken.lexeme()[0];
+        consume(currentToken.kind(), "Expected '+' or '-'");
+        auto right = parseFactor();
+        expr = std::make_unique<TermExpression>(std::move(expr), std::move(right), op);
+    }
+    return expr;
+}
+
+std::unique_ptr<Expression> Parser::parseFactor() {
+    auto expr = parseUnary();
+    while (currentToken.is(Token::Kind::Asterisk) || currentToken.is(Token::Kind::Slash)) {
+        char op = currentToken.lexeme()[0];
+        consume(currentToken.kind(), "Expected '*' or '/'");
+        auto right = parseUnary();
+        expr = std::make_unique<FactorExpression>(std::move(expr), std::move(right), op);
+    }
+    return expr;
+}
+
+std::unique_ptr<Expression> Parser::parseUnary() {
+    if (currentToken.is(Token::Kind::Minus)) {
+        consume(Token::Kind::Minus, "Expected '-'");
+        auto expr = parsePrimary();
+        return std::make_unique<UnaryExpression>(std::move(expr), '-');
+    }
+    else if (currentToken.is(Token::Kind::Not)) {
+        consume(Token::Kind::Not, "Expected 'not'");
+        auto expr = parsePrimary();
+        return std::make_unique<UnaryExpression>(std::move(expr), '!');
+    }
+    else {
+        return parsePrimary();
+    }
+}
+
+std::unique_ptr<Expression> Parser::parseBinary() {
+    auto left = parseUnary(); // Start with higher precedence expressions
+    while (currentToken.is(Token::Kind::And) || currentToken.is(Token::Kind::Or) || currentToken.is(Token::Kind::Plus) || currentToken.is(Token::Kind::Minus) || currentToken.is(Token::Kind::Asterisk) || currentToken.is(Token::Kind::Slash)) { // Pseudocode for operator check
+        char op = currentToken.lexeme()[0];
+        consume(currentToken.kind(), "Expected a certain operator token"); // Move to the next token
+        auto right = parseUnary();
+        left = std::make_unique<BinaryExpression>(std::move(left), std::move(right), op);
+    }
+    return left;
+}
+
+std::unique_ptr<Expression> Parser::parsePrimary() {
+
+    if (currentToken.is(Token::Kind::Identifier)) {
+        auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
+        consume(Token::Kind::Identifier, "Expected identifier.");
+        consume(Token::Kind::Semicolon, "Expected ';' after identifier.");
+        return expr;
+    }
+    else if (currentToken.is(Token::Kind::Number)) {
+        auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
+        consume(Token::Kind::Number, "Expected number.");
+        consume(Token::Kind::Semicolon, "Expected ';' after identifier.");
+        return expr;
+    }
+
+    else if (currentToken.is(Token::Kind::FloatLiteral)) {
+        auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
+        consume(Token::Kind::FloatLiteral, "Expected string literal.");
+        consume(Token::Kind::Semicolon, "Expected ';' after identifier.");
+        return expr;
+    }
+    else {
+        throw std::runtime_error("Unexpected token in expression in parsePrimary()");
+    }
+
+    return std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
+}
+
+// std::unique_ptr<Statement> Parser::parseAssignmentStatement() {
+    
+// }
 
 // std::unique_ptr<FunctionDefinition> Parser::parseFunctionDefinition() {
 //     consume(Token::Kind::Function, "Expected 'function' keyword.");

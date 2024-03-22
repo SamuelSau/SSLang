@@ -12,8 +12,8 @@ public:
         LeftCurly, RightCurly, LessThan, GreaterThan, Equal, Plus, Minus,
         Asterisk, Slash, Hash, Dot, Comma, Colon, Semicolon, SingleQuote,
         DoubleQuote, Comment, Pipe, End, Unexpected, Function, If, Else,
-        While, Return, For, Int, Float, String, Bool, Not, Arrow, StringLiteral,
-        FloatLiteral
+        While, Return, For, Int, Float, String, Bool, Arrow, StringLiteral,
+        FloatLiteral, Log, Not, Equals, NotEquals, Or, And,
     };
 
     Token() noexcept : m_kind{Kind::End}, m_lexeme{""} {} //default constructor
