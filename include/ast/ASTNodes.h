@@ -126,7 +126,7 @@ public:
     AssignmentExpression(std::string name, std::unique_ptr<Expression> expr)
         : name(std::move(name)), expression(std::move(expr)) {}
     std::string toString() const override {
-        return name + " = " + expression->toString() + ";";
+        return "(" + name + " = " + expression->toString() + ";" + ")";
     }
 };
 
@@ -150,8 +150,8 @@ class EqualityExpression : public Expression {
 public:
     std::unique_ptr<Expression> left;
     std::unique_ptr<Expression> right;
-    char op;
-    EqualityExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, char op)
+    std::string op;
+    EqualityExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
 };
 
@@ -159,8 +159,8 @@ class ComparisonExpression : public Expression {
 public:
     std::unique_ptr<Expression> left;
     std::unique_ptr<Expression> right;
-    char op;
-    ComparisonExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, char op)
+    std::string op;
+    ComparisonExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
 };
 
@@ -168,8 +168,8 @@ class TermExpression : public Expression {
 public:
     std::unique_ptr<Expression> left;
     std::unique_ptr<Expression> right;
-    char op;
-    TermExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, char op)
+    std::string op;
+    TermExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
     std::string toString() const override {
         return "(" + left->toString() + " " + op + " " + right->toString() + ")";
@@ -180,8 +180,8 @@ class FactorExpression : public Expression {
 public:
     std::unique_ptr<Expression> left;
     std::unique_ptr<Expression> right;
-    char op;
-    FactorExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, char op)
+    std::string op;
+    FactorExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
     std::string toString() const override {
         return "(" + left->toString() + " " + op + " " + right->toString() + ")";
@@ -202,8 +202,8 @@ class BinaryExpression : public Expression {
 public:
     std::unique_ptr<Expression> left;
     std::unique_ptr<Expression> right;
-    char op;
-    BinaryExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, char op)
+    std::string op;
+    BinaryExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
     std::string toString() const override {
         return "(" + left->toString() + " " + op + " " + right->toString() + ")";
@@ -213,8 +213,8 @@ public:
 class UnaryExpression : public Expression {
 public:
     std::unique_ptr<Expression> expr;
-    char op;
-    UnaryExpression(std::unique_ptr<Expression> expr, char op)
+    std::string op;
+    UnaryExpression(std::unique_ptr<Expression> expr, std::string op)
         : expr(std::move(expr)), op(op) {}
     std::string toString() const override {
         return "(" + op + expr->toString() + ")";

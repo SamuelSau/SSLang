@@ -127,7 +127,7 @@ std::unique_ptr<Expression> Parser::parseComparison() {
 std::unique_ptr<Expression> Parser::parseTerm() {
     auto expr = parseFactor();
     while (currentToken.is(Token::Kind::Plus) || currentToken.is(Token::Kind::Minus)) {
-        char op = currentToken.lexeme()[0];
+        std::string op(1, currentToken.lexeme()[0]);
         consume(currentToken.kind(), "Expected '+' or '-'");
         auto right = parseFactor();
         expr = std::make_unique<TermExpression>(std::move(expr), std::move(right), op);
@@ -138,7 +138,7 @@ std::unique_ptr<Expression> Parser::parseTerm() {
 std::unique_ptr<Expression> Parser::parseFactor() {
     auto expr = parseUnary();
     while (currentToken.is(Token::Kind::Asterisk) || currentToken.is(Token::Kind::Slash)) {
-        char op = currentToken.lexeme()[0];
+        std::string op(1, currentToken.lexeme()[0]);
         consume(currentToken.kind(), "Expected '*' or '/'");
         auto right = parseUnary();
         expr = std::make_unique<FactorExpression>(std::move(expr), std::move(right), op);
@@ -150,12 +150,14 @@ std::unique_ptr<Expression> Parser::parseUnary() {
     if (currentToken.is(Token::Kind::Minus)) {
         consume(Token::Kind::Minus, "Expected '-'");
         auto expr = parsePrimary();
-        return std::make_unique<UnaryExpression>(std::move(expr), '-');
+        std::string op = "-";
+        return std::make_unique<UnaryExpression>(std::move(expr), op);
     }
     else if (currentToken.is(Token::Kind::Not)) {
         consume(Token::Kind::Not, "Expected 'not'");
         auto expr = parsePrimary();
-        return std::make_unique<UnaryExpression>(std::move(expr), '!');
+        std::string op = "not";
+        return std::make_unique<UnaryExpression>(std::move(expr), op);
     }
     else {
         return parsePrimary();
@@ -165,7 +167,7 @@ std::unique_ptr<Expression> Parser::parseUnary() {
 std::unique_ptr<Expression> Parser::parseBinary() {
     auto left = parseUnary(); // Start with higher precedence expressions
     while (currentToken.is(Token::Kind::And) || currentToken.is(Token::Kind::Or) || currentToken.is(Token::Kind::Plus) || currentToken.is(Token::Kind::Minus) || currentToken.is(Token::Kind::Asterisk) || currentToken.is(Token::Kind::Slash)) { // Pseudocode for operator check
-        char op = currentToken.lexeme()[0];
+        std::string op(1, currentToken.lexeme()[0]);
         consume(currentToken.kind(), "Expected a certain operator token"); // Move to the next token
         auto right = parseUnary();
         left = std::make_unique<BinaryExpression>(std::move(left), std::move(right), op);

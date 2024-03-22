@@ -9,7 +9,7 @@
 
 int main() {
   auto code =
-  "x = 5;";
+  "x = 5 + 10;";
 
   Lexer lex(code);
   // for (auto token = lex.next(); !token.is_one_of(Token::Kind::End, Token::Kind::Unexpected); token = lex.next()) {
