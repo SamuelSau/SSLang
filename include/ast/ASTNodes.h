@@ -136,6 +136,9 @@ public:
     std::unique_ptr<Expression> right;
     LogicOrExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right)
         : left(std::move(left)), right(std::move(right)) {}
+    std::string toString() const override {
+        return "(" + left->toString() + " " + right->toString() + ")";
+    }
 };
 
 class LogicAndExpression : public Expression {
@@ -144,6 +147,9 @@ public:
     std::unique_ptr<Expression> right;
     LogicAndExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right)
         : left(std::move(left)), right(std::move(right)) {}
+    std::string toString() const override {
+        return "(" + left->toString() + " " + right->toString() + ")";
+    }
 };
 
 class EqualityExpression : public Expression {
@@ -153,6 +159,9 @@ public:
     std::string op;
     EqualityExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
+    std::string toString() const override {
+        return "(" + left->toString() + " " + op + " " + right->toString() + ")";
+    }
 };
 
 class ComparisonExpression : public Expression {
@@ -162,6 +171,9 @@ public:
     std::string op;
     ComparisonExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
+    std::string toString() const override {
+        return "(" + left->toString() + " " + op + " " + right->toString() + ")";
+    }
 };
 
 class TermExpression : public Expression {

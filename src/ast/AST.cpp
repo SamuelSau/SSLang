@@ -107,21 +107,47 @@ std::unique_ptr<Expression> Parser::parseAssignment() {
 }
 
 std::unique_ptr<Expression> Parser::parseLogicOr() {
-    return nullptr;
+    auto left = parseLogicAnd(); // Start with higher precedence expressions
+    while (currentToken.is(Token::Kind::Or)) {
+        std::string op = std::string(currentToken.lexeme());
+        consume(Token::Kind::Or, "Expected 'or'");
+        auto right = parseLogicAnd(); // Parse the right operand
+        left = std::make_unique<LogicOrExpression>(std::move(left), std::move(right));
+    }
+    return left;
 }
 
 std::unique_ptr<Expression> Parser::parseLogicAnd() {
-    return nullptr;
+    auto left = parseEquality(); // Proceed to the next precedence level
+    while (currentToken.is(Token::Kind::And)) {
+        std::string op = std::string(currentToken.lexeme());
+        consume(Token::Kind::And, "Expected 'and'");
+        auto right = parseEquality(); // Parse the right operand
+        left = std::make_unique<LogicAndExpression>(std::move(left), std::move(right));
+    }
+    return left;
 }
 
 std::unique_ptr<Expression> Parser::parseEquality() {
-    return nullptr;
-
+    auto left = parseComparison(); // Proceed to the next precedence level
+    while (currentToken.is(Token::Kind::Equals)) {
+        std::string op = std::string(currentToken.lexeme());
+        consume(Token::Kind::Equals, "Expected 'equals'");
+        auto right = parseComparison(); // Parse the right operand
+        left = std::make_unique<EqualityExpression>(std::move(left), std::move(right), op);
+    }
+    return left;
 }
 
 std::unique_ptr<Expression> Parser::parseComparison() {
-    return nullptr;
-
+    auto left = parseTerm(); // This assumes parseTerm handles addition/subtraction
+    while (currentToken.is_one_of(Token::Kind::GreaterThan, Token::Kind::LessThan)) {
+        std::string op = std::string(currentToken.lexeme());
+        consume(currentToken.kind(), "Expected comparison operator");
+        auto right = parseTerm(); // Parse the right operand
+        left = std::make_unique<ComparisonExpression>(std::move(left), std::move(right), op);
+    }
+    return left;
 }
 
 std::unique_ptr<Expression> Parser::parseTerm() {
