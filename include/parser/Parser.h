@@ -27,9 +27,9 @@ public:
 
     //Declaration parsing
     std::unique_ptr<Declaration> parseDeclaration(); 
-    std::unique_ptr<IntDeclaration> parseIntDeclaration(); //int x = 5;
-    std::unique_ptr<FloatDeclaration> parseFloatDeclaration(); //flt x = 5.0;
-    std::unique_ptr<StringDeclaration> parseStringDeclaration(); //str x = "hello";
+    std::unique_ptr<Declaration> parseIntDeclaration(); //int x = 5;
+    std::unique_ptr<Declaration> parseFloatDeclaration(); //flt x = 5.0;
+    std::unique_ptr<Declaration> parseStringDeclaration(); //str x = "hello";
 
     // Expression parsing
     std::unique_ptr<Expression> parseExpression(); 

@@ -8,7 +8,7 @@
 #include <iostream>
 
 
-std::unique_ptr<IntDeclaration> Parser::parseIntDeclaration() {
+std::unique_ptr<Declaration> Parser::parseIntDeclaration() {
     consume(Token::Kind::Int, "Expected 'int' for this declaration.");
 
     if (!currentToken.is(Token::Kind::Identifier)) {
@@ -30,7 +30,7 @@ std::unique_ptr<IntDeclaration> Parser::parseIntDeclaration() {
     return std::make_unique<IntDeclaration>(name, number);
 }
 
-std::unique_ptr<FloatDeclaration> Parser::parseFloatDeclaration() {
+std::unique_ptr<Declaration> Parser::parseFloatDeclaration() {
     consume(Token::Kind::Float, "Expected 'flt' for this declaration.");
     
     if (!currentToken.is(Token::Kind::Identifier)) {
@@ -55,7 +55,7 @@ std::unique_ptr<FloatDeclaration> Parser::parseFloatDeclaration() {
 }
 
 
-std::unique_ptr<StringDeclaration> Parser::parseStringDeclaration(){
+std::unique_ptr<Declaration> Parser::parseStringDeclaration(){
     consume(Token::Kind::String, "Expected 'str' for this declaration.");
 
     if (!currentToken.is(Token::Kind::Identifier)) {
