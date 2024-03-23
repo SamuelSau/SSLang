@@ -224,15 +224,95 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
         return expr;
     }
     else {
-        throw std::runtime_error("Unexpected token in expression in parsePrimary()");
+        throw std::runtime_error("Unexpected token in expression for parsing primary");
     }
 
     return std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
 }
 
-// std::unique_ptr<Statement> Parser::parseAssignmentStatement() {
+//Parsing statements
+std::unique_ptr<Statement> Parser::parseLoopStatement(){
+
+    consume(Token::Kind::Loop, "Expected 'loop'");
+    if (currentToken.is(Token::Kind::Range)) {
+        return parseForLoop(); // Parse for-style loop
+    } else if (currentToken.is(Token::Kind::LeftParen)){
+        return parseWhileLoop(); // Parse while-style loop
+    }
+    else {
+        throw std::runtime_error("Expected either 'range' or '(' after 'loop'");
+    }
+}
+
+std::unique_ptr<Statement> Parser::parseForLoop(){
+    consume(Token::Kind::Range, "Expected 'range'");
+    consume(Token::Kind::LeftParen, "Expected '(' after 'range'");
     
-// }
+    auto start = parseExpression(); // Parse start of range
+    consume(Token::Kind::Comma, "Expected ',' after start value");
+    auto end = parseExpression(); // Parse end of range
+    consume(Token::Kind::RightParen, "Expected ')' after range values");
+    auto body = parseBlock(); // Parse loop body as a block of statements
+    
+    return std::make_unique<LoopStatement>(std::move(start), std::move(end), std::move(body));
+}
+
+std::unique_ptr<Statement> Parser::parseWhileLoop() {
+    consume(Token::Kind::LeftParen, "Expected '(' after while 'loop'");
+    auto condition = parseExpression(); // Parse loop condition
+    consume(Token::Kind::RightParen, "Expected ')' after condition while loop");
+    auto body = parseBlock(); // Parse loop body as a block of statements
+    
+    return std::make_unique<WhileLoopStatement>(std::move(condition), std::move(body));
+}
+
+//Parsing blocks
+std::unique_ptr<Statement> Parser::parseBlock() {
+    consume(Token::Kind::LeftCurly, "Expected '{' at start of block");
+
+    std::vector<std::unique_ptr<Statement>> statements;
+    while (!currentToken.is(Token::Kind::RightCurly) && !currentToken.is(Token::Kind::End)) {
+        statements.push_back(parseStatement());
+    }
+
+    consume(Token::Kind::RightCurly, "Expected '}' at end of block");
+
+    return std::make_unique<BlockStatement>(std::move(statements));
+}
+
+std::unique_ptr<Statement> Parser::parsePrintStatement() {
+    if (currentToken.is(Token::Kind::Log)) {
+        consume(Token::Kind::Log, "Expected 'print' keyword.");
+        auto expr = parseExpression();
+        
+        if (currentToken.is(Token::Kind::RightParen)){
+            consume(Token::Kind::RightParen, "Expected ')' after expression.");
+        }
+
+        consume(Token::Kind::Semicolon, "Expected ';' after expression.");
+        return std::make_unique<PrintStatement>(std::move(expr));
+    }
+    else {
+        throw std::runtime_error("Unexpected token: Expected 'print' keyword.");
+    }
+}
+
+std::unique_ptr<Statement> Parser::parseReturnStatement() {
+    consume(Token::Kind::Return, "Expected 'ret' keyword.");
+    auto expr = parseExpression();
+    consume(Token::Kind::Semicolon, "Expected ';' after expression.");
+    return std::make_unique<ReturnStatement>(std::move(expr));
+}
+
+std::unique_ptr<Statement> Parser::parseIfStatement() {
+    consume(Token::Kind::If, "Expected 'if' keyword.");
+    consume(Token::Kind::LeftParen, "Expected '(' after 'if'.");
+    auto condition = parseExpression();
+    consume(Token::Kind::RightParen, "Expected ')' after condition.");
+    auto body = parseBlock();
+    return std::make_unique<IfStatement>(std::move(condition), std::move(body));
+}
+
 
 // std::unique_ptr<FunctionDefinition> Parser::parseFunctionDefinition() {
 //     consume(Token::Kind::Function, "Expected 'function' keyword.");

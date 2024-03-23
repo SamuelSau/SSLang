@@ -124,9 +124,8 @@ Token Lexer::identifier() noexcept {
         {"function", Token::Kind::Function},
         {"if", Token::Kind::If},
         {"else", Token::Kind::Else},
-        {"while", Token::Kind::While},
         {"ret", Token::Kind::Return},
-        {"for", Token::Kind::For},
+        {"loop", Token::Kind::Loop},
         {"int", Token::Kind::Int},
         {"flt", Token::Kind::Float},
         {"str", Token::Kind::String},
@@ -137,6 +136,10 @@ Token Lexer::identifier() noexcept {
         {"notEquals", Token::Kind::NotEquals},
         {"or", Token::Kind::Or},
         {"and", Token::Kind::And},
+        {"range", Token::Kind::Range},
+        {"for", Token::Kind::For},
+        {"while", Token::Kind::While},
+        {"print", Token::Kind::Print}
     };
 
     auto keyword = keywords.find(text);
@@ -250,11 +253,11 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
       "Equal",       "Plus",        "Minus",      "Asterisk",   "Slash",
       "Hash",        "Dot",         "Comma",      "Colon",      "Semicolon",
       "SingleQuote", "DoubleQuote", "Comment",    "Pipe",       "End",
-      "Unexpected",  "Function",    "If",         "Else",       "While", 
-      "Return",      "For",         "Int",        "Float",      "String", 
+      "Unexpected",  "Function",    "If",         "Else",       "Range"     
+      "Return",      "Loop",         "Int",        "Float",      "String", 
       "Bool",        "Arrow",      "StringLiteral", "FloatLiteral",
       "Log",         "Not",         "Equals",     "NotEquals",  "Or", "And",
-      "Uninitialized"
+      "Uninitialized", "For",       "While",     "Print"
   };
   return os << names[static_cast<int>(kind)];
 }

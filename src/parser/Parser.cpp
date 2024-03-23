@@ -51,7 +51,12 @@ std::unique_ptr<Declaration> Parser::parseDeclaration() {
 
 std::unique_ptr<Expression> Parser::parseExpression() {
     std::unique_ptr<Expression> leftExp;
-
+    if (currentToken.is(Token::Kind::End)){
+        throw std::runtime_error("Unexpected end of file. Expected expression.");
+    }
+    if (currentToken.is(Token::Kind::LeftParen)){
+        consume(Token::Kind::LeftParen, "Expected '(' at the beginning of an expression.");
+    }
     // Start with unary or primary expressions
     if (currentToken.is(Token::Kind::Identifier) && peekToken().is(Token::Kind::Equal)) {
             leftExp = parseAssignment(); 
@@ -60,8 +65,11 @@ std::unique_ptr<Expression> Parser::parseExpression() {
         // Definitely a unary operation
         leftExp = parseUnary();
     } 
-    else if (currentToken.is(Token::Kind::Identifier) &&  (peekToken().is(Token::Kind::Plus) || peekToken().is(Token::Kind::Minus) || peekToken().is(Token::Kind::Asterisk) || peekToken().is(Token::Kind::Slash))) {
+    else if (currentToken.is_one_of(Token::Kind::Identifier, Token::Kind::Number, Token::Kind::FloatLiteral) &&  (peekToken().is(Token::Kind::Plus) || peekToken().is(Token::Kind::Minus) || peekToken().is(Token::Kind::Asterisk) || peekToken().is(Token::Kind::Slash))) {
         leftExp = parseBinary();
+    }
+    else if (currentToken.is_one_of(Token::Kind::Identifier, Token::Kind::Number, Token::Kind::FloatLiteral) && peekToken().is(Token::Kind::LessThan) || peekToken().is(Token::Kind::GreaterThan) || peekToken().is(Token::Kind::Equal) || peekToken().is(Token::Kind::NotEquals)) {
+        leftExp = parseComparison();
     }
     else {
         // Default to primary for numbers, literals, etc.
@@ -70,140 +78,39 @@ std::unique_ptr<Expression> Parser::parseExpression() {
     return leftExp;
 }
 
-
 //Statement parsing
+std::unique_ptr<Statement> Parser::parseStatement() {
+    if (currentToken.is(Token::Kind::Loop)) {
+        return parseLoopStatement();
+    }
+    else if (currentToken.is(Token::Kind::Log)) {
+        return parsePrintStatement();
+    }
+    else if (currentToken.is(Token::Kind::If)) {
+        return parseIfStatement();
+    }
+    else if (currentToken.is(Token::Kind::Return)) {
+        return parseReturnStatement();
+    }
+    else {
 
-// std::unique_ptr<Statement> Parser::parseStatement() {
-//     if (currentToken.is(Token::Kind::Identifier)) {
-//         return parseAssignmentStatement();
-//     }
-//     else if (currentToken.is(Token::Kind::Log)) {
-//         return parsePrintStatement();
-//     }
-//     else if (currentToken.is(Token::Kind::For)) {
-//         return parseForStatement();
-//     }
-//     else if (currentToken.is(Token::Kind::If)) {
-//         return parseIfStatement();
-//     }
-//     else if (currentToken.is(Token::Kind::While)) {
-//         return parseWhileStatement();
-//     }
-//     else if (currentToken.is(Token::Kind::Return)) {
-//         return parseReturnStatement();
-//     }
-//     else {
-//         throw std::runtime_error("Expected statement type of either assignment, print, for, if, while, or return.");
-//     }
-// }
+        if (currentToken.is_one_of(Token::Kind::For, Token::Kind::While)) {
+            throw std::runtime_error("Forbidden keyword for statements. Please use loop.");
+        }
+        else if (currentToken.is(Token::Kind::Print)) {
+            throw std::runtime_error("Forbidden keyword for statements. Please use log().");
+        }
 
-// std::unique_ptr<FunctionDefinition> Parser::parseFunctionDefinition() {
-//     return nullptr; // Placeholder
-// }
+        if (peekToken().is(Token::Kind::LeftParen)) {
+            while (!currentToken.is(Token::Kind::Semicolon)) {
+                advance();
+                if (currentToken.is(Token::Kind::LeftCurly)) {
+                    throw std::runtime_error("Wrong keyword used in statement. Only supported with log, loop, if, and return.");
+                }
+            }
+        }
 
-// std::unique_ptr<ASTNode> Parser::parseProgram() {
-//     // Example implementation for parsing the program
-//     std::vector<std::unique_ptr<Declaration>> declarations;
-//     while (!atEnd()) {
-//         declarations.push_back(parseDeclaration());
-//     }
-//     return std::make_unique<Program>(std::move(declarations)); // Assuming a Program node exists
-// }
-
-// std::unique_ptr<Expression> Parser::parseExpression() {
-//     // Simple example: Assume expressions are just binary expressions or identifiers for now
-//     auto left = parsePrimary();
-    
-//     while (currentToken.is(Token::Kind::Plus)) { // Simplified: handle '+' only for demonstration
-//         char op = '+'; // Assuming currentToken.lexeme() would return "+"
-//         consume(Token::Kind::Plus, "Expected '+'");
-//         auto right = parsePrimary();
-//         left = std::make_unique<BinaryExpression>(std::move(left), std::move(right), op);
-//     }
-    
-//     return left;
-// }
-
-// std::unique_ptr<Expression> Parser::parsePrimary() {
-//     if (currentToken.is(Token::Kind::Identifier)) {
-//         auto expr = std::make_unique<Identifier>(std::string(currentToken.lexeme()));
-//         consume(Token::Kind::Identifier, "Expected identifier.");
-//         return expr;
-//     // } else if (currentToken.is(Token::Kind::Number)) {
-//     //     auto expr = std::make_unique<>(std::stoi(std::string(currentToken.lexeme())));
-//     //     consume(Token::Kind::Number, "Expected number.");
-//     //     return expr;
-//     // } else if (currentToken.is(Token::Kind::LeftParen)) {
-//     //     consume(Token::Kind::LeftParen, "Expected '('");
-//     //     auto expr = parseExpression();
-//     //     consume(Token::Kind::RightParen, "Expected ')'");
-//     //     return expr;
-//     // 
-// }
-
-//     throw std::runtime_error("Unexpected token in expression.");
-// }
-
-
-// std::unique_ptr<Statement> Parser::parseStatement() {
-//     // Example: Distinguishing a block statement from others
-//     if (currentToken.is(Token::Kind::LeftCurly)) {
-//         return parseBlock();
-//     }
-//     // Fallback for now to treat all other statements as expression statements
-//     auto expr = parseExpression();
-//     consume(Token::Kind::Semicolon, "Expected ';' after expression statement.");
-//     return std::make_unique<ExpressionStatement>(std::move(expr)); // Assuming ExpressionStatement exists
-// }
-
-// std::unique_ptr<BlockStatement> Parser::parseBlock() {
-//     consume(Token::Kind::LeftCurly, "Expected '{' at the start of block.");
-//     std::vector<std::unique_ptr<Statement>> statements;
-//     while (!currentToken.is(Token::Kind::RightCurly) && !currentToken.is(Token::Kind::End)) {
-//         statements.push_back(parseStatement());
-//     }
-//     consume(Token::Kind::RightCurly, "Expected '}' at the end of block.");
-//     return std::make_unique<BlockStatement>(std::move(statements));
-// }
-
-
-// std::unique_ptr<Declaration> Parser::parseDeclaration() {
-//     return nullptr; // Placeholder
-// }
-
-
-// std::unique_ptr<VariableDeclaration> Parser::parseVariableDeclaration() {
-//     return nullptr; // Placeholder
-// }
-
-// std::unique_ptr<Expression> Parser::parseUnary() {
-//     return nullptr; // Placeholder
-// }
-
-// std::unique_ptr<Expression> Parser::parseFactor() {
-//     return nullptr; // Placeholder
-// }
-
-// std::unique_ptr<Expression> Parser::parseTerm() {
-//     return nullptr; // Placeholder
-// }
-
-// std::unique_ptr<Expression> Parser::parseComparison() {
-//     return nullptr; // Placeholder
-// }
-
-// std::unique_ptr<Expression> Parser::parseEquality() {
-//     return nullptr; // Placeholder
-// }
-
-// std::unique_ptr<Expression> Parser::parseLogicAnd() {
-//     return nullptr; // Placeholder
-// }
-
-// std::unique_ptr<Expression> Parser::parseLogicOr() {
-//     return nullptr; // Placeholder
-// }
-
-// std::unique_ptr<Expression> Parser::parseAssignment() {
-//     return nullptr; // Placeholder 
-//}
+        auto expr = parseExpression();
+        return std::make_unique<ExpressionStatement>(std::move(expr));
+    }
+}

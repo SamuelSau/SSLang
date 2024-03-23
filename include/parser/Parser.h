@@ -33,29 +33,36 @@ public:
 
     // Expression parsing
     std::unique_ptr<Expression> parseExpression(); 
-    std::unique_ptr<Expression> parseAssignment(); //x = 5 (where x is already declared)
-    std::unique_ptr<Expression> parseLogicOr(); //x or y
-    std::unique_ptr<Expression> parseLogicAnd(); //x and y
-    std::unique_ptr<Expression> parseEquality(); //x equals 5
-    std::unique_ptr<Expression> parseComparison(); //x > 5
-    std::unique_ptr<Expression> parseTerm(); //x + 5
-    std::unique_ptr<Expression> parseFactor(); //x * 5
-    std::unique_ptr<Expression> parseUnary(); //-x, not x
-    std::unique_ptr<Expression> parseBinary(); //add(2,3)
-    std::unique_ptr<Expression> parsePrimary(); //x
+    std::unique_ptr<Expression> parseAssignment(); //x = 5; (where x is already declared)
+    std::unique_ptr<Expression> parseLogicOr(); //x or y;
+    std::unique_ptr<Expression> parseLogicAnd(); //x and y;
+    std::unique_ptr<Expression> parseEquality(); //x equals 5;
+    std::unique_ptr<Expression> parseComparison(); //x > 5;
+    std::unique_ptr<Expression> parseTerm(); //x + 5;
+    std::unique_ptr<Expression> parseFactor(); //x * 5;
+    std::unique_ptr<Expression> parseUnary(); //-x, not x;
+    std::unique_ptr<Expression> parseBinary(); // x + y;
+    std::unique_ptr<Expression> parsePrimary(); //x;
 
     //Statement parsing
-    // std::unique_ptr<Statement> parseStatement();
-    // std::unique_ptr<PrintStatement> parsePrintStatement(); //log(2+3);
-    // std::unique_ptr<AssignmentStatement> parseAssignmentStatement();
-    // std::unique_ptr<ForStatement> parseForStatement(); //for range(2,3) {}
-    // std::unique_ptr<IfStatement> parseIfStatement(); //if (x > 5) {}
-    // std::unique_ptr<WhileStatement> parseWhileStatement(); //while (x > 5) {}
-    // std::unique_ptr<ReturnStatement> parseReturnStatement(); //return 2+3;
+    std::unique_ptr<Statement> parseStatement();
+    std::unique_ptr<Statement> parsePrintStatement(); //log(2+3);
+    //std::unique_ptr<Statement> parseAssignmentStatement(); //x = 5;
+    std::unique_ptr<Statement> parseLoopStatement(); //loop range(2,3) or loop(x<2) {} support for loops with range and while condition
+    std::unique_ptr<Statement> parseWhileLoop(); //while (x < 5) {}
+    std::unique_ptr<Statement> parseForLoop(); //for (int i = 0; i < 5; i++) {}
+    std::unique_ptr<Statement> parseIfStatement(); //if (x > 5) {}
+    std::unique_ptr<Statement> parseReturnStatement(); //ret 2+3;
 
     //Function parsing
     //std::unique_ptr<FunctionDefinition> parseFunctionDefinition(); //function add(a: int, b: int) -> int {}
     //std::unique_ptr<FunctionCall> parseFunctionCall(); //add(2,3);
+
+    //Block parsing
+    std::unique_ptr<Statement> parseBlock(); //{int x = 5;}
+
+    //Program parsing
+    //std::unique_ptr<Program> parseProgram();
 
 };
 

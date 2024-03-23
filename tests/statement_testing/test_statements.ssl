@@ -1,0 +1,9 @@
+log(2+3);
+log(x);
+loop range(2,3){y=7;}
+loop (x > 2) {x = 2;}
+if(x > 2) {x = x+2;}
+for(int x = 2; x < y; x++){x=x+1;}
+while(x< 2) {z = 22;}
+print(x);
+log
