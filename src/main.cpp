@@ -6,31 +6,35 @@
 #include "lexer/Lexer.h"
 #include "parser/Parser.h"
 #include "ast/ASTNodes.h"
+#include "symbolTable/SymbolTable.h"
 
 int main() {
   auto code =
-  "x = 5 + 10;";
+  "int x = 10;";
 
   Lexer lex(code);
-  // for (auto token = lex.next(); !token.is_one_of(Token::Kind::End, Token::Kind::Unexpected); token = lex.next()) {
-  //   std::cout << std::setw(12) << "Lexeme: " << token.lexeme() << "\t | Token: " << token.kind() << "\n";
-  // }
   Parser parser(lex);
 
-  //simply testing the parser with declarations
-  //auto declaration = parser.parseDeclaration();
-  auto expression = parser.parseExpression();
-  std::cout << expression->toString() << std::endl;
-  //auto statement = parser.parseStatement();
-//   try {
-//     auto program = parser.parseProgram();
-//     program->print(std::cout);
-// } catch (const std::exception& e) {
-//     std::cerr << "Exception caught in parseProgram: " << e.what() << std::endl;
-// } catch (...) {
-//     std::cerr << "Unknown exception caught in parseProgram." << std::endl;
-// }
-//   std::cout << "Program parsed.\n";
+  parser.parseProgram();
+
+  std::cout <<  "Program parsed successfully" << std::endl;
+
+  SymbolTable symbolTable;
+
+  symbolTable.enterScope();
+
+  //symbolTable.addVariable("x", "int");
+  symbolTable.addVariable("y", "int");
+
+  if (!symbolTable.addVariable("x", "int")) {
+    std::cout << "Variable x already declared" << std::endl;
+    std::cout << "Variable x is declared in scope: " << symbolTable.getSymbolInfo("x")->scopeId << std::endl;
+  }
+  else {
+    std::cout << "Variable is not declared" << std::endl;
+  }
+
+  symbolTable.leaveScope();
 
   return 0;
 }

@@ -14,7 +14,7 @@ include_directories(
     )
 
 # Main Executable
-add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
+add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp)
 
 # Test Executable
 add_executable(SSLangDeclareTests tests/declaration_testing/declaration_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
@@ -24,6 +24,7 @@ add_executable(SSLangFunctionTests tests/function_testing/function_test_runner.c
 add_executable(SSLangProgramTests tests/program_testing/program_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
 
 # Custom target for running tests
+
 add_custom_target(run_declare_tests
     COMMAND SSLangDeclareTests
     DEPENDS SSLangDeclareTests
@@ -46,8 +47,8 @@ add_custom_target(run_function_tests
     DEPENDS SSLangFunctionTests
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR})
 
-add_custom_target(run_type_tests
-    COMMAND SSLangTypeTests
-    DEPENDS SSLangTypeTests
+add_custom_target(run_program_tests
+    COMMAND SSLangProgramTests
+    DEPENDS SSLangProgramTests
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
 )
