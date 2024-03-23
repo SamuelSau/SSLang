@@ -47,7 +47,7 @@ public:
     //Statement parsing
     std::unique_ptr<Statement> parseStatement();
     std::unique_ptr<Statement> parsePrintStatement(); //log(2+3);
-    //std::unique_ptr<Statement> parseAssignmentStatement(); //x = 5;
+    //std::unique_ptr<Statement> parseAssignmentStatement(); //x = 5; same as parsing an expression? 
     std::unique_ptr<Statement> parseLoopStatement(); //loop range(2,3) or loop(x<2) {} support for loops with range and while condition
     std::unique_ptr<Statement> parseWhileLoop(); //while (x < 5) {}
     std::unique_ptr<Statement> parseForLoop(); //for (int i = 0; i < 5; i++) {}
@@ -55,8 +55,9 @@ public:
     std::unique_ptr<Statement> parseReturnStatement(); //ret 2+3;
 
     //Function parsing
-    //std::unique_ptr<FunctionDefinition> parseFunctionDefinition(); //function add(a: int, b: int) -> int {}
-    //std::unique_ptr<FunctionCall> parseFunctionCall(); //add(2,3);
+    std::unique_ptr<Function> parseFunction(); //function add(a: int, b: int) -> int {}
+    std::unique_ptr<Function> parseFunctionDefinition(); //function add(a: int, b: int) -> int {}
+    std::unique_ptr<Function> parseFunctionCall(); //add(2,3);
 
     //Block parsing
     std::unique_ptr<Statement> parseBlock(); //{int x = 5;}

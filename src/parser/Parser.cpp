@@ -114,3 +114,15 @@ std::unique_ptr<Statement> Parser::parseStatement() {
         return std::make_unique<ExpressionStatement>(std::move(expr));
     }
 }
+
+std::unique_ptr<Function> Parser::parseFunction(){
+    if (currentToken.is(Token::Kind::Function)) {
+        return parseFunctionDefinition();
+    }
+    else if (currentToken.is(Token::Kind::Call)) {
+        return parseFunctionCall();
+    }
+    else {
+        throw std::runtime_error("Expected valid function call or definition.");
+    }
+}

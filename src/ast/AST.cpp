@@ -313,50 +313,68 @@ std::unique_ptr<Statement> Parser::parseIfStatement() {
     return std::make_unique<IfStatement>(std::move(condition), std::move(body));
 }
 
+//Parsing functions
+std::unique_ptr<Function> Parser::parseFunctionDefinition() {
+    consume(Token::Kind::Function, "Expected 'function' keyword.");
+    std::string name = std::string(currentToken.lexeme());
+    consume(Token::Kind::Identifier, "Expected function name.");
+    
+    // Parameter parsing
+    std::vector<std::string> parameters;
+    consume(Token::Kind::LeftParen, "Expected '(' after function name.");
+    while (!currentToken.is(Token::Kind::RightParen)) {
+        std::string paramName = std::string(currentToken.lexeme());
+        consume(Token::Kind::Identifier, "Expected parameter name.");
 
-// std::unique_ptr<FunctionDefinition> Parser::parseFunctionDefinition() {
-//     consume(Token::Kind::Function, "Expected 'function' keyword.");
-//     consume(Token::Kind::Identifier, "Expected function name.");
-//     std::string name = std::string(currentToken.lexeme());
+        parameters.emplace_back(paramName);
 
-//     // Parameter parsing
-//     std::vector<std::pair<std::string, std::string>> parameters;
-//     consume(Token::Kind::LeftParen, "Expected '(' after function name.");
-//     while (!currentToken.is(Token::Kind::RightParen)) {
-//         if (!currentToken.is(Token::Kind::Identifier)) {
-//             throw std::runtime_error("Expected parameter name.");
-//         }
-//         std::string paramName = std::string(currentToken.lexeme());
-//         consume(Token::Kind::Identifier, "Expected parameter name.");
+        if (currentToken.is(Token::Kind::Comma)) {
+            consume(Token::Kind::Comma, "Expected ',' between parameters.");
+        } 
+        
+        else if (!currentToken.is(Token::Kind::RightParen)) {
+            throw std::runtime_error("Expected ',' or ')' after parameter.");
+        }
+    }
+    consume(Token::Kind::RightParen, "Expected ')' after parameters.");
 
-//         consume(Token::Kind::Colon, "Expected ':' after parameter name.");
-//         if (!currentToken.is(Token::Kind::Identifier)) {
-//             throw std::runtime_error("Expected parameter type.");
-//         }
-//         std::string paramType = std::string(currentToken.lexeme());
-//         consume(Token::Kind::Identifier, "Expected parameter type.");
+    consume(Token::Kind::Arrow, "Expected '->' after parameters.");
+    std::string returnType = std::string(currentToken.lexeme());
+    if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String)) {
+        consume(currentToken.kind(), "Expected return type after '->' of which can be int, flt, or str.");
+    } else {
+        throw std::runtime_error("Expected return type.");
+    }
+    // Function body parsing
+    std::vector<std::unique_ptr<Statement>> body;
+    consume(Token::Kind::LeftCurly, "Expected '{' before function body.");
+    while (!currentToken.is(Token::Kind::RightCurly) && !currentToken.is(Token::Kind::End)) {
+        body.push_back(parseStatement()); // Parse each statement in the body
+    }
+    consume(Token::Kind::RightCurly, "Expected '}' after function body.");
 
-//         parameters.emplace_back(paramName, paramType);
+    return std::make_unique<FunctionDefinition>(name, parameters, returnType, std::move(body));
+}
 
-//         if (currentToken.is(Token::Kind::Comma)) {
-//             consume(Token::Kind::Comma, "Expected ',' between parameters.");
-//         } else if (!currentToken.is(Token::Kind::RightParen)) {
-//             throw std::runtime_error("Expected ',' or ')' after parameter.");
-//         }
-//     }
-//     consume(Token::Kind::RightParen, "Expected ')' after parameters.");
+std::unique_ptr <Function> Parser::parseFunctionCall() {
+    consume(Token::Kind::Call, "Expected 'call' keyword.");
+    consume(Token::Kind::Identifier, "Expected function name.");
+    std::string name = std::string(currentToken.lexeme());
 
-//     consume(Token::Kind::Arrow, "Expected '->' after parameters.");
-//     consume(Token::Kind::Identifier, "Expected return type.");
-//     std::string returnType = std::string(currentToken.lexeme());
+    // Argument parsing
+    std::vector<std::unique_ptr<Expression>> arguments;
+    consume(Token::Kind::LeftParen, "Expected '(' after function name.");
+    while (!currentToken.is(Token::Kind::RightParen)) {
+        auto arg = parseExpression();
+        arguments.push_back(std::move(arg));
 
-//     // Function body parsing
-//     std::vector<std::unique_ptr<Statement>> body;
-//     consume(Token::Kind::LeftCurly, "Expected '{' before function body.");
-//     while (!currentToken.is(Token::Kind::RightCurly) && !currentToken.is(Token::Kind::End)) {
-//         body.push_back(parseStatement()); // Parse each statement in the body
-//     }
-//     consume(Token::Kind::RightCurly, "Expected '}' after function body.");
+        if (currentToken.is(Token::Kind::Comma)) {
+            consume(Token::Kind::Comma, "Expected ',' between arguments.");
+        } else if (!currentToken.is(Token::Kind::RightParen)) {
+            throw std::runtime_error("Expected ',' or ')' after argument.");
+        }
+    }
+    consume(Token::Kind::RightParen, "Expected ')' after arguments.");
 
-//     return std::make_unique<FunctionDefinition>(name, parameters, returnType, std::move(body));
-// }
+    return std::make_unique<FunctionCall>(name, std::move(arguments));
+}

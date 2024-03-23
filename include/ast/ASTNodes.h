@@ -19,8 +19,9 @@ class Expression : public ASTNode {
 class Statement : public ASTNode {
     public:
 };
-class Definition : public ASTNode {
+class Function : public ASTNode {
     public:
+        virtual std::string toString() const = 0;  //pure virtual function
 };
 // class Program : public ASTNode {
 // public:
@@ -52,18 +53,6 @@ public:
     std::string value;
     StringDeclaration(std::string name, std::string value)
         : name(std::move(name)), value(std::move(value)) {}
-};
-
-
-//Definitions
-class FunctionDefinition : public Definition {
-public:
-    std::string name;
-    std::vector<std::pair<std::string, std::string>> parameters;
-    std::string returnType;
-    std::vector<std::unique_ptr<Statement>> body;
-    FunctionDefinition(std::string name, std::vector<std::pair<std::string, std::string>> parameters, std::string returnType, std::vector<std::unique_ptr<Statement>> body)
-        : name(std::move(name)), parameters(std::move(parameters)), returnType(std::move(returnType)), body(std::move(body)) {}
 };
 
 //Expressions
@@ -257,4 +246,36 @@ public:
         : expression(std::move(expr)) {}
 };
 
+
+class FunctionDefinition : public Function {
+public:
+    std::string name;
+    std::vector<std::string> parameters;
+    std::string returnType;
+    std::vector<std::unique_ptr<Statement>> body;
+    FunctionDefinition(std::string name, std::vector<std::string> parameters, std::string returnType, std::vector<std::unique_ptr<Statement>> body)
+        : name(std::move(name)), parameters(std::move(parameters)), returnType(std::move(returnType)), body(std::move(body)) {}
+    std::string toString() const override {
+        std::string params;
+        for (const auto& param : parameters) {
+            params += ",";
+        }
+        return "function " + name + "(" + params + ") -> " + returnType + " {}";
+    }
+};
+
+class FunctionCall : public Function {
+public:
+    std::string name;
+    std::vector<std::unique_ptr<Expression>> arguments;
+    FunctionCall(std::string name, std::vector<std::unique_ptr<Expression>> arguments)
+        : name(std::move(name)), arguments(std::move(arguments)) {}
+    std::string toString() const override {
+        std::string args;
+        for (const auto& arg : arguments) {
+            args += arg->toString() + ", ";
+        }
+        return name + "(" + args + ")";
+    }
+};
 #endif // ASTNODES_H
