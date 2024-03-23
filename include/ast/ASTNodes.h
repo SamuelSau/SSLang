@@ -23,12 +23,6 @@ class Function : public ASTNode {
     public:
         virtual std::string toString() const = 0;  //pure virtual function
 };
-// class Program : public ASTNode {
-// public:
-//     std::vector<std::unique_ptr<Declaration>> declarations;
-//     Program(std::vector<std::unique_ptr<Declaration>> declarations)
-//         : declarations(std::move(declarations)) {}
-// };
 
 //Declarations
 class IntDeclaration : public Declaration {
@@ -56,7 +50,6 @@ public:
 };
 
 //Expressions
-
 class AssignmentExpression : public Expression {
 public:
     std::string name;
@@ -64,7 +57,7 @@ public:
     AssignmentExpression(std::string name, std::unique_ptr<Expression> expr)
         : name(std::move(name)), expression(std::move(expr)) {}
     std::string toString() const override {
-        return "(" + name + " = " + expression->toString() + ";" + ")";
+        return "aE[" + name + " = " + expression->toString() + ";" + "]";
     }
 };
 
@@ -75,7 +68,7 @@ public:
     LogicOrExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right)
         : left(std::move(left)), right(std::move(right)) {}
     std::string toString() const override {
-        return "(" + left->toString() + " " + right->toString() + ")";
+        return "loE[" + left->toString() + " " + right->toString() + "]";
     }
 };
 
@@ -86,7 +79,7 @@ public:
     LogicAndExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right)
         : left(std::move(left)), right(std::move(right)) {}
     std::string toString() const override {
-        return "(" + left->toString() + " " + right->toString() + ")";
+        return "laE[" + left->toString() + " " + right->toString() + "]";
     }
 };
 
@@ -98,7 +91,7 @@ public:
     EqualityExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
     std::string toString() const override {
-        return "(" + left->toString() + " " + op + " " + right->toString() + ")";
+        return "eE[" + left->toString() + " " + op + " " + right->toString() + "]";
     }
 };
 
@@ -110,7 +103,7 @@ public:
     ComparisonExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
     std::string toString() const override {
-        return "(" + left->toString() + " " + op + " " + right->toString() + ")";
+        return "cE[" + left->toString() + " " + op + " " + right->toString() + "]";
     }
 };
 
@@ -122,7 +115,7 @@ public:
     TermExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
     std::string toString() const override {
-        return "(" + left->toString() + " " + op + " " + right->toString() + ")";
+        return "tE[" + left->toString() + " " + op + " " + right->toString() + "]";
     }
 };
 
@@ -134,7 +127,7 @@ public:
     FactorExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
     std::string toString() const override {
-        return "(" + left->toString() + " " + op + " " + right->toString() + ")";
+        return "fE[" + left->toString() + " " + op + " " + right->toString() + "]";
     }
 };
 
@@ -144,7 +137,7 @@ public:
     PrimaryExpression(std::string name)
         : name(std::move(name)) {}
     std::string toString() const override {
-        return name;
+        return "pE[" + name + "]";
     }
 };
 
@@ -156,7 +149,7 @@ public:
     BinaryExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
         : left(std::move(left)), right(std::move(right)), op(op) {}
     std::string toString() const override {
-        return "(" + left->toString() + " " + op + " " + right->toString() + ")";
+        return "bE[" + left->toString() + " " + op + " " + right->toString() + "]";
     }
 };
 
@@ -167,7 +160,7 @@ public:
     UnaryExpression(std::unique_ptr<Expression> expr, std::string op)
         : expr(std::move(expr)), op(op) {}
     std::string toString() const override {
-        return "(" + op + expr->toString() + ")";
+        return "uE[" + op + expr->toString() + "]";
     }
 };
 
@@ -223,6 +216,12 @@ public:
         : condition(std::move(condition)), body(std::move(body)) {}
 };
 
+class ElseStatement : public Statement {
+public:
+    std::unique_ptr<Statement> body;
+    ElseStatement(std::unique_ptr<Statement> body)
+        : body(std::move(body)) {}
+};
 
 class ReturnStatement : public Statement {
 public:
@@ -264,7 +263,7 @@ public:
     }
 };
 
-class FunctionCall : public Function {
+class FunctionCall : public Function { //we only accept statements for function calls like: call add(3,2);
 public:
     std::string name;
     std::vector<std::unique_ptr<Expression>> arguments;
@@ -273,9 +272,24 @@ public:
     std::string toString() const override {
         std::string args;
         for (const auto& arg : arguments) {
-            args += arg->toString() + ", ";
+            args += ",";
         }
-        return name + "(" + args + ")";
+        return "call " + name + "(" + args + ")";
     }
 };
+
+//Program
+class Program : public ASTNode {
+public:
+    std::vector<std::unique_ptr<Declaration>> declarations;
+    std::vector<std::unique_ptr<Statement>> statements;
+    std::vector<std::unique_ptr<Function>> functions;
+    std::vector<std::unique_ptr<Expression>> expressions;
+
+    Program() = default;
+
+    Program(std::vector<std::unique_ptr<Declaration>> declarations, std::vector<std::unique_ptr<Statement>> statements, std::vector<std::unique_ptr<Function>> functions, std::vector<std::unique_ptr<Expression>> expressions)
+        : declarations(std::move(declarations)), statements(std::move(statements)), functions(std::move(functions)), expressions(std::move(expressions)) {}
+};
+
 #endif // ASTNODES_H

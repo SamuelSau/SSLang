@@ -1,0 +1,30 @@
+flt x = 0.0002; 
+str s = "Hello World";
+int y = 2;
+int t = 2;
+x = 7;
+t = 100.0;
+function add(x, y) -> int { 
+    log(x);
+    loop (x > y){
+        if (3 > not y) {
+            ret(x);
+        }
+        else { 
+            ret(t);
+        }
+    }
+    //for loop
+    loop range(2,3){ 
+        if (y equals x){
+            ret(true);
+        }
+        ret(false);
+    }
+    x = x - 1;
+}
+
+if (t notEquals x){
+    ret(false);
+}
+call add(x, y);

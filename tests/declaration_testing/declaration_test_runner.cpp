@@ -43,9 +43,7 @@ void runTestsInFile(const std::string& filePath) {
 int main() {
     // List of test files
     std::vector<std::string> testFiles = {
-        "../../../../tests/declaration_testing/test_int_declarations.ssl",
-        "../../../../tests/declaration_testing/test_float_declarations.ssl",
-        "../../../../tests/declaration_testing/test_string_declarations.ssl",
+        "../../../../tests/declaration_testing/test_declarations.ssl",
     };
 
     for (const auto& filePath : testFiles) {

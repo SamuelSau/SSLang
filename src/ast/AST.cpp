@@ -20,7 +20,7 @@ std::unique_ptr<IntDeclaration> Parser::parseIntDeclaration() {
     consume(Token::Kind::Equal, "Expected '=' after variable name.");
     
     if (!currentToken.is(Token::Kind::Number)) {
-        throw std::runtime_error("Expected number after '=' in variable declaration.");
+        throw std::runtime_error("Expected integer after '=' in variable declaration.");
     }
     std::string number = std::string(currentToken.lexeme());
     consume(Token::Kind::Number, "Expected integer after '='.");
@@ -74,8 +74,6 @@ std::unique_ptr<StringDeclaration> Parser::parseStringDeclaration(){
 
     consume(Token::Kind::Semicolon, "Expected ';' after variable declaration.");
     
-    std::cout << "Parsed string declaration: " << name << " = " << value << std::endl;
-
     return std::make_unique<StringDeclaration>(name, value);
 
 }
@@ -141,7 +139,7 @@ std::unique_ptr<Expression> Parser::parseEquality() {
 
 std::unique_ptr<Expression> Parser::parseComparison() {
     auto left = parseTerm(); // This assumes parseTerm handles addition/subtraction
-    while (currentToken.is_one_of(Token::Kind::GreaterThan, Token::Kind::LessThan)) {
+    while (currentToken.is_one_of(Token::Kind::GreaterThan, Token::Kind::LessThan, Token::Kind::NotEquals, Token::Kind::Equals)) {
         std::string op = std::string(currentToken.lexeme());
         consume(currentToken.kind(), "Expected comparison operator");
         auto right = parseTerm(); // Parse the right operand
@@ -206,7 +204,6 @@ std::unique_ptr<Expression> Parser::parseBinary() {
 
 
 std::unique_ptr<Expression> Parser::parsePrimary() {
-
     if (currentToken.is(Token::Kind::Identifier)) {
         auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
         consume(Token::Kind::Identifier, "Expected identifier.");
@@ -214,7 +211,7 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
     }
     else if (currentToken.is(Token::Kind::Number)) {
         auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
-        consume(Token::Kind::Number, "Expected number.");
+        consume(Token::Kind::Number, "Expected integer.");
         return expr;
     }
 
@@ -223,8 +220,23 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
         consume(Token::Kind::FloatLiteral, "Expected string literal.");
         return expr;
     }
+
+    else if (currentToken.is_one_of(Token::Kind::True, Token::Kind::False)){
+        auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
+        consume(currentToken.kind(), "Expected boolean value.");
+        return expr;
+    }
+
     else {
-        throw std::runtime_error("Unexpected token in expression for parsing primary");
+
+        if (currentToken.is(Token::Kind::Comment)){
+            advance();
+        }
+        else {
+            std::cout << "Unexpected token in primary expression: " << "\""<<currentToken.lexeme() <<"\"" << " with type: " << "\"" <<currentToken.kind()<< "\"" << std::endl;
+            std::cout << "Next token is: " << "\"" << peekToken().lexeme() << "\"" << " with type: " << "\"" << peekToken().kind() << "\"" << std::endl;
+            throw std::runtime_error("Unexpected token in expression for parsing primary");
+        }
     }
 
     return std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
@@ -282,49 +294,67 @@ std::unique_ptr<Statement> Parser::parseBlock() {
 
 std::unique_ptr<Statement> Parser::parsePrintStatement() {
     if (currentToken.is(Token::Kind::Log)) {
-        consume(Token::Kind::Log, "Expected 'print' keyword.");
-        auto expr = parseExpression();
+        consume(Token::Kind::Log, "Expected 'log' keyword.");
+
+        consume(Token::Kind::LeftParen, "Expected '(' after 'log' keyword.");
+        auto expr = parseUnary();
         
-        if (currentToken.is(Token::Kind::RightParen)){
-            consume(Token::Kind::RightParen, "Expected ')' after expression.");
+        if (currentToken.is(Token::Kind::Comma) || currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash)) {
+            throw std::runtime_error("Only expected 1 expression to log.");
         }
 
-        consume(Token::Kind::Semicolon, "Expected ';' after expression.");
+        consume(Token::Kind::RightParen, "Expected ')' after logging expression.");
+
+        consume(Token::Kind::Semicolon, "Expected ';' after logging expression.");
         return std::make_unique<PrintStatement>(std::move(expr));
     }
     else {
-        throw std::runtime_error("Unexpected token: Expected 'print' keyword.");
+        throw std::runtime_error("Unexpected token: Expected 'log' keyword.");
     }
 }
 
 std::unique_ptr<Statement> Parser::parseReturnStatement() {
     consume(Token::Kind::Return, "Expected 'ret' keyword.");
-    auto expr = parseExpression();
-    consume(Token::Kind::Semicolon, "Expected ';' after expression.");
+    consume(Token::Kind::LeftParen, "Expected '(' after 'ret' keyword.");
+    auto expr = parseUnary();
+
+    if (currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash) || currentToken.is(Token::Kind::Comma)){
+        throw std::runtime_error("Expected 1 expression after 'ret' keyword.");
+    }
+    consume(Token::Kind::RightParen, "Expected ')' after returning expression.");
+    consume(Token::Kind::Semicolon, "Expected ';' after returning expression.");
     return std::make_unique<ReturnStatement>(std::move(expr));
 }
 
 std::unique_ptr<Statement> Parser::parseIfStatement() {
     consume(Token::Kind::If, "Expected 'if' keyword.");
-    consume(Token::Kind::LeftParen, "Expected '(' after 'if'.");
+    consume(Token::Kind::LeftParen, "Expected '(' after 'if' keyword.");
     auto condition = parseExpression();
-    consume(Token::Kind::RightParen, "Expected ')' after condition.");
+    consume(Token::Kind::RightParen, "Expected ')' after if condition.");
     auto body = parseBlock();
     return std::make_unique<IfStatement>(std::move(condition), std::move(body));
 }
+
+std::unique_ptr<Statement> Parser::parseElseStatement(){
+    consume(Token::Kind::Else, "Expected 'else' keyword.");
+    auto body = parseBlock();
+    return std::make_unique<ElseStatement>(std::move(body));
+
+}
+
 
 //Parsing functions
 std::unique_ptr<Function> Parser::parseFunctionDefinition() {
     consume(Token::Kind::Function, "Expected 'function' keyword.");
     std::string name = std::string(currentToken.lexeme());
-    consume(Token::Kind::Identifier, "Expected function name.");
+    consume(Token::Kind::Identifier, "Expected function name to be identifer");
     
     // Parameter parsing
     std::vector<std::string> parameters;
     consume(Token::Kind::LeftParen, "Expected '(' after function name.");
     while (!currentToken.is(Token::Kind::RightParen)) {
         std::string paramName = std::string(currentToken.lexeme());
-        consume(Token::Kind::Identifier, "Expected parameter name.");
+        consume(Token::Kind::Identifier, "Expected parameter name to be identifier");
 
         parameters.emplace_back(paramName);
 
@@ -343,11 +373,12 @@ std::unique_ptr<Function> Parser::parseFunctionDefinition() {
     if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String)) {
         consume(currentToken.kind(), "Expected return type after '->' of which can be int, flt, or str.");
     } else {
-        throw std::runtime_error("Expected return type.");
+        throw std::runtime_error("Expected return type of either int, flt, or str");
     }
     // Function body parsing
     std::vector<std::unique_ptr<Statement>> body;
     consume(Token::Kind::LeftCurly, "Expected '{' before function body.");
+    
     while (!currentToken.is(Token::Kind::RightCurly) && !currentToken.is(Token::Kind::End)) {
         body.push_back(parseStatement()); // Parse each statement in the body
     }
@@ -356,9 +387,9 @@ std::unique_ptr<Function> Parser::parseFunctionDefinition() {
     return std::make_unique<FunctionDefinition>(name, parameters, returnType, std::move(body));
 }
 
-std::unique_ptr <Function> Parser::parseFunctionCall() {
+std::unique_ptr<Function> Parser::parseFunctionCall() {
     consume(Token::Kind::Call, "Expected 'call' keyword.");
-    consume(Token::Kind::Identifier, "Expected function name.");
+    consume(Token::Kind::Identifier, "Expected function name to be identifier");
     std::string name = std::string(currentToken.lexeme());
 
     // Argument parsing
@@ -375,6 +406,32 @@ std::unique_ptr <Function> Parser::parseFunctionCall() {
         }
     }
     consume(Token::Kind::RightParen, "Expected ')' after arguments.");
-
+    consume(Token::Kind::Semicolon, "Expected ';' after function call.");
     return std::make_unique<FunctionCall>(name, std::move(arguments));
+}
+
+std::unique_ptr<Program> Parser::parseProgram() {
+
+    auto program = std::make_unique<Program>();
+    std::vector<std::unique_ptr<Function>> functions;
+    std::vector<std::unique_ptr<Declaration>> declarations;
+    std::vector<std::unique_ptr<Statement>> statements;
+    std::vector<std::unique_ptr<Expression>> expressions;
+
+    while (!currentToken.is(Token::Kind::End)) {
+        if (currentToken.is_one_of(Token::Kind::Function, Token::Kind::Call)) {
+            program->functions.push_back(parseFunction());
+        }
+        else if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String)) {
+            program->declarations.push_back(parseDeclaration());
+        } 
+        else if (currentToken.is_one_of(Token::Kind::Log, Token::Kind::Return, Token::Kind::If, Token::Kind::Loop, Token::Kind::Else, Token::Kind::Call)) {
+            program->statements.push_back(parseStatement());
+        }
+        else {
+            program->expressions.push_back(parseExpression());
+        }
+    }
+
+    return program;
 }

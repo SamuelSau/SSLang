@@ -21,6 +21,7 @@ add_executable(SSLangDeclareTests tests/declaration_testing/declaration_test_run
 add_executable(SSLangExpressionTests tests/expression_testing/expression_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
 add_executable(SSLangStatementTests tests/statement_testing/statement_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
 add_executable(SSLangFunctionTests tests/function_testing/function_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
+add_executable(SSLangProgramTests tests/program_testing/program_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
 
 # Custom target for running tests
 add_custom_target(run_declare_tests
@@ -44,3 +45,9 @@ add_custom_target(run_function_tests
     COMMAND SSLangFunctionTests
     DEPENDS SSLangFunctionTests
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR})
+
+add_custom_target(run_type_tests
+    COMMAND SSLangTypeTests
+    DEPENDS SSLangTypeTests
+    WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
+)

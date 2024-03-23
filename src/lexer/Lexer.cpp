@@ -140,7 +140,9 @@ Token Lexer::identifier() noexcept {
         {"for", Token::Kind::For},
         {"while", Token::Kind::While},
         {"print", Token::Kind::Print},
-        {"call", Token::Kind::Call}
+        {"call", Token::Kind::Call},
+        {"true", Token::Kind::True},
+        {"false", Token::Kind::False}
 
     };
 

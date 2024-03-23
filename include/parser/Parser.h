@@ -52,18 +52,19 @@ public:
     std::unique_ptr<Statement> parseWhileLoop(); //while (x < 5) {}
     std::unique_ptr<Statement> parseForLoop(); //for (int i = 0; i < 5; i++) {}
     std::unique_ptr<Statement> parseIfStatement(); //if (x > 5) {}
+    std::unique_ptr<Statement> parseElseStatement(); //else {}
     std::unique_ptr<Statement> parseReturnStatement(); //ret 2+3;
 
     //Function parsing
     std::unique_ptr<Function> parseFunction(); //function add(a: int, b: int) -> int {}
     std::unique_ptr<Function> parseFunctionDefinition(); //function add(a: int, b: int) -> int {}
-    std::unique_ptr<Function> parseFunctionCall(); //add(2,3);
+    std::unique_ptr<Function> parseFunctionCall(); //add(2,3); (this is for statements)
 
     //Block parsing
     std::unique_ptr<Statement> parseBlock(); //{int x = 5;}
 
     //Program parsing
-    //std::unique_ptr<Program> parseProgram();
+    std::unique_ptr<Program> parseProgram();
 
 };
 

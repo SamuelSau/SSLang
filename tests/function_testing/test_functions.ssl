@@ -1,10 +1,12 @@
-function add(x, y) -> int {ret x;}
-function add(x, y, z, a, b) -> int {ret a + b;}
+function add(x, y) -> int {ret (x);}
+function combine(x, y, z, a, b) -> str {ret (x);}
 call add(x,y);
 func add(x,y)
 add(x,y);
 call(int x, int y);
-function add(int x, int y) -> {ret x;}
+function add(int x, int y) -> {ret (x);}
 function 21(x, y) -> {ret x;}
-function add(x, y) -> t {ret x;}
-function add(x, y) {ret x;}
+function add(x, y) -> t {ret (x);}
+function add(x, y) {ret (x);}
+function add(x, y);
+function add(x, y) -> str;
