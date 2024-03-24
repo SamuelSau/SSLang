@@ -7,6 +7,7 @@
 #include "parser/Parser.h"
 #include "ast/ASTNodes.h"
 #include "symbolTable/SymbolTable.h"
+#include "semanticAnalyzer/SemanticAnalyzer.h"
 
 int main() {
   auto code =
@@ -20,7 +21,7 @@ int main() {
   std::cout <<  "Program parsed successfully" << std::endl;
 
   SymbolTable symbolTable;
-
+  
   symbolTable.enterScope();
 
   //symbolTable.addVariable("x", "int");

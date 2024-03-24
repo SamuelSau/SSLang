@@ -54,4 +54,18 @@ std::optional<SymbolInfo> SymbolTable::getSymbolInfo(const std::string& name) {
     return std::nullopt; // Variable not found
 }
 
+bool SymbolTable::addFunction(const std::string& name, const FunctionInfo& info) {
+    if (functions.find(name) != functions.end()) {
+        return false; // Function already declared
+    }
+    functions[name] = info;
+    return true;
+}
 
+std::optional<FunctionInfo> SymbolTable::getFunctionInfo(const std::string& name) const {
+    auto it = functions.find(name);
+    if (it != functions.end()) {
+        return it->second; // Found the function, return its info
+    }
+    return std::nullopt; // Function not found
+}
