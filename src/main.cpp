@@ -13,8 +13,17 @@ int main() {
   auto code =
   "int x = 10;";
 
-  Lexer lex(code);
-  Parser parser(lex);
+  Lexer lexer(code);
+  Parser parser(lexer);
+  
+  auto program = parser.parseProgram();
+
+  if (program) {
+        std::cout << program->toString() << std::endl;
+  } 
+  else {
+        std::cout << "Parsing failed." << std::endl;
+  }
 
   parser.parseProgram();
 

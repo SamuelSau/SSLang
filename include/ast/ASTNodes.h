@@ -10,13 +10,13 @@
 class ASTNode {
     public:
         virtual ~ASTNode() = default;
+        virtual std::string toString() const = 0; // Ensure all AST nodes can represent themselves
 };
 class Declaration : public ASTNode {
     public:
 };
 class Expression : public ASTNode {
     public:
-        virtual std::string toString() const = 0; 
         virtual std::string getType(SymbolTable& symbolTable) const = 0;
 };
 class Statement : public ASTNode {
@@ -24,7 +24,35 @@ class Statement : public ASTNode {
 };
 class Function : public ASTNode {
     public:
-        virtual std::string toString() const = 0;  
+};
+class Program : public ASTNode {
+    public:
+        std::vector<std::unique_ptr<Declaration>> declarations;
+        std::vector<std::unique_ptr<Statement>> statements;
+        std::vector<std::unique_ptr<Function>> functions;
+        std::vector<std::unique_ptr<Expression>> expressions;
+
+        Program() = default;
+
+        Program(std::vector<std::unique_ptr<Declaration>> declarations, std::vector<std::unique_ptr<Statement>> statements, std::vector<std::unique_ptr<Function>> functions, std::vector<std::unique_ptr<Expression>> expressions)
+            : declarations(std::move(declarations)), statements(std::move(statements)), functions(std::move(functions)), expressions(std::move(expressions)) {}
+
+        std::string toString() const override {
+            std::string result = "Program:\n";
+            for (const auto& decl : declarations) {
+                result += "Declaration: " + decl->toString() + "\n";
+            }
+            for (const auto& stmt : statements) {
+                result += "Statement: " + stmt->toString() + "\n";
+            }
+            for (const auto& func : functions) {
+                result += "Function: " + func->toString() + "\n";
+            }
+            for (const auto& expr : expressions) {
+                result += "Expression: " + expr->toString() + "\n";
+            }
+            return result;
+        }
 };
 
 //Declarations
@@ -35,6 +63,10 @@ class IntDeclaration : public Declaration {
 
         IntDeclaration(std::string name, std::string number)
             : name(std::move(name)), number(std::move(number)) {}
+
+        std::string toString() const override {
+            return "IntDeclaration[" + name + " = " + number + "]";
+        }
 };
 
 class FloatDeclaration : public Declaration {
@@ -44,6 +76,10 @@ class FloatDeclaration : public Declaration {
 
         FloatDeclaration(std::string name, std::string number)
             : name(std::move(name)), number(std::move(number)) {}
+        
+        std::string toString() const override {
+            return "FloatDeclaration[" + name + " = " + number + "]";
+        }
 };
 
 class StringDeclaration : public Declaration {
@@ -53,6 +89,10 @@ class StringDeclaration : public Declaration {
 
         StringDeclaration(std::string name, std::string value)
             : name(std::move(name)), value(std::move(value)) {}
+        
+        std::string toString() const override {
+            return "StringDeclaration[" + name + " = " + value + "]";
+        }
 };
 
 //Expressions
@@ -73,7 +113,6 @@ class AssignmentExpression : public Expression {
         if (!symbolInfo.has_value()) {
             throw std::runtime_error("Variable " + name + " not declared.");
         }
-        // Optionally, check if the type of `expression` matches the variable's type
         return symbolInfo->type;
         }
 };
@@ -336,6 +375,10 @@ class LoopStatement : public Statement {
 
         LoopStatement(std::unique_ptr<Expression> start, std::unique_ptr<Expression> end, std::unique_ptr<Statement> body)
             : start(std::move(start)), end(std::move(end)), body(std::move(body)) {}
+        
+        std::string toString() const override {
+            return "LoopStatement[" + start->toString() + " " + end->toString() + " " + body->toString() + "]";
+        }
 };
 
 class PrintStatement : public Statement {
@@ -343,6 +386,10 @@ class PrintStatement : public Statement {
         std::unique_ptr<Expression> expr;
         PrintStatement(std::unique_ptr<Expression> expr)
             : expr(std::move(expr)) {}
+        
+        std::string toString() const override {
+            return "PrintStatement[" + expr->toString() + "]";
+        }
 };
 
 class WhileLoopStatement : public Statement {
@@ -351,6 +398,10 @@ class WhileLoopStatement : public Statement {
         std::unique_ptr<Statement> body;
         WhileLoopStatement(std::unique_ptr<Expression> condition, std::unique_ptr<Statement> body)
             : condition(std::move(condition)), body(std::move(body)) {}
+        
+        std::string toString() const override {
+            return "WhileLoopStatement[" + condition->toString() + " " + body->toString() + "]";
+        }
 };
 
 class ForLoopStatement : public Statement {
@@ -360,6 +411,10 @@ class ForLoopStatement : public Statement {
         std::unique_ptr<Expression> body;
         ForLoopStatement(std::unique_ptr<Expression> start, std::unique_ptr<Expression> end, std::unique_ptr<Expression> body)
             : start(std::move(start)), end(std::move(end)), body(std::move(body)) {}
+        
+        std::string toString() const override {
+            return "ForLoopStatement[" + start->toString() + " " + end->toString() + " " + body->toString() + "]";
+        }
 };
 
 class AssignmentStatement : public Statement {
@@ -368,6 +423,10 @@ class AssignmentStatement : public Statement {
         std::unique_ptr<Expression> expression;
         AssignmentStatement(std::string name, std::unique_ptr<Expression> expr)
             : name(std::move(name)), expression(std::move(expr)) {}
+        
+        std::string toString() const override {
+            return "AssignmentStatement[" + name + " = " + expression->toString() + "]";
+        }
 };
 
 
@@ -377,6 +436,10 @@ class IfStatement : public Statement {
         std::unique_ptr<Statement> body;
         IfStatement(std::unique_ptr<Expression> condition, std::unique_ptr<Statement> body)
             : condition(std::move(condition)), body(std::move(body)) {}
+        
+        std::string toString() const override {
+            return "IfStatement[" + condition->toString() + " " + body->toString() + "]";
+        }
 };
 
 class ElseStatement : public Statement {
@@ -384,6 +447,10 @@ class ElseStatement : public Statement {
         std::unique_ptr<Statement> body;
         ElseStatement(std::unique_ptr<Statement> body)
             : body(std::move(body)) {}
+        
+        std::string toString() const override {
+            return "ElseStatement[" + body->toString() + "]";
+        }
 };
 
 class ReturnStatement : public Statement {
@@ -391,6 +458,10 @@ class ReturnStatement : public Statement {
         std::unique_ptr<Expression> expression;
         ReturnStatement(std::unique_ptr<Expression> expr)
             : expression(std::move(expr)) {}
+        
+        std::string toString() const override {
+            return "ReturnStatement[" + expression->toString() + "]";
+        }
 };
 
 class BlockStatement : public Statement {
@@ -399,6 +470,14 @@ class BlockStatement : public Statement {
 
         BlockStatement(std::vector<std::unique_ptr<Statement>> statements)
             : statements(std::move(statements)) {}
+        
+        std::string toString() const override {
+            std::string result = "BlockStatement:\n";
+            for (const auto& stmt : statements) {
+                result += stmt->toString() + "\n";
+            }
+            return result;
+        }
 };
 
 class ExpressionStatement : public Statement {
@@ -406,6 +485,10 @@ class ExpressionStatement : public Statement {
         std::unique_ptr<Expression> expression;
         ExpressionStatement(std::unique_ptr<Expression> expr)
             : expression(std::move(expr)) {}
+        
+        std::string toString() const override {
+            return "ExpressionStatement[" + expression->toString() + "]";
+        }
 };
 
 
@@ -415,8 +498,10 @@ class FunctionDefinition : public Function {
         std::vector<std::string> parameters;
         std::string returnType;
         std::vector<std::unique_ptr<Statement>> body;
+        
         FunctionDefinition(std::string name, std::vector<std::string> parameters, std::string returnType, std::vector<std::unique_ptr<Statement>> body)
             : name(std::move(name)), parameters(std::move(parameters)), returnType(std::move(returnType)), body(std::move(body)) {}
+        
         std::string toString() const override {
             std::string params;
             for (const auto& param : parameters) {
@@ -430,8 +515,10 @@ class FunctionCall : public Function { //we only accept statements for function 
     public:
         std::string name;
         std::vector<std::unique_ptr<Expression>> arguments;
+        
         FunctionCall(std::string name, std::vector<std::unique_ptr<Expression>> arguments)
             : name(std::move(name)), arguments(std::move(arguments)) {}
+        
         std::string toString() const override {
             std::string args;
             for (const auto& arg : arguments) {
@@ -440,19 +527,4 @@ class FunctionCall : public Function { //we only accept statements for function 
             return "call " + name + "(" + args + ")";
         }
 };
-
-//Program
-class Program : public ASTNode {
-    public:
-        std::vector<std::unique_ptr<Declaration>> declarations;
-        std::vector<std::unique_ptr<Statement>> statements;
-        std::vector<std::unique_ptr<Function>> functions;
-        std::vector<std::unique_ptr<Expression>> expressions;
-
-        Program() = default;
-
-        Program(std::vector<std::unique_ptr<Declaration>> declarations, std::vector<std::unique_ptr<Statement>> statements, std::vector<std::unique_ptr<Function>> functions, std::vector<std::unique_ptr<Expression>> expressions)
-            : declarations(std::move(declarations)), statements(std::move(statements)), functions(std::move(functions)), expressions(std::move(expressions)) {}
-};
-
 #endif // ASTNODES_H

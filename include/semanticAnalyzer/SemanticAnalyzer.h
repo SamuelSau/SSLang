@@ -1,4 +1,3 @@
-// SemanticAnalyzer.h
 #ifndef SEMANTIC_ANALYZER_H
 #define SEMANTIC_ANALYZER_H
 
@@ -12,6 +11,8 @@ public:
     std::string evaluateExpressionType(const Expression* expr);
     void checkAssignment(const std::string& varName, const Expression* expr);
     void checkFunctionCall(const FunctionCall* call);
+
+    
 
 private:
     SymbolTable& symbolTable;
