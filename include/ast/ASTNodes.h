@@ -6,11 +6,15 @@
 #include <memory>
 
 #include "symbolTable/SymbolTable.h"
+#include "semanticAnalyzer/SemanticAnalyzer.h"
+
+class IVisitor;
 
 class ASTNode {
     public:
         virtual ~ASTNode() = default;
-        virtual std::string toString() const = 0; // Ensure all AST nodes can represent themselves
+        virtual std::string toString() const = 0;
+        virtual void accept(IVisitor* visitor) const = 0;
 };
 class Declaration : public ASTNode {
     public:
@@ -53,6 +57,10 @@ class Program : public ASTNode {
             }
             return result;
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 //Declarations
@@ -67,6 +75,10 @@ class IntDeclaration : public Declaration {
         std::string toString() const override {
             return "IntDeclaration[" + name + " = " + number + "]";
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class FloatDeclaration : public Declaration {
@@ -80,6 +92,10 @@ class FloatDeclaration : public Declaration {
         std::string toString() const override {
             return "FloatDeclaration[" + name + " = " + number + "]";
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class StringDeclaration : public Declaration {
@@ -92,6 +108,10 @@ class StringDeclaration : public Declaration {
         
         std::string toString() const override {
             return "StringDeclaration[" + name + " = " + value + "]";
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -114,6 +134,10 @@ class AssignmentExpression : public Expression {
             throw std::runtime_error("Variable " + name + " not declared.");
         }
         return symbolInfo->type;
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -142,6 +166,10 @@ class LogicOrExpression : public Expression {
                 throw std::runtime_error("Type mismatch in logical or expression. Only support boolean types.");
             }
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class LogicAndExpression : public Expression {
@@ -167,6 +195,10 @@ class LogicAndExpression : public Expression {
             else {
                 throw std::runtime_error("Type mismatch in logical and expression. Only support boolean types.");
             }
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -203,6 +235,10 @@ class EqualityExpression : public Expression {
                 throw std::runtime_error("Type mismatch in equality expression. Only support int and float types.");
             }
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class ComparisonExpression : public Expression {
@@ -232,6 +268,10 @@ class ComparisonExpression : public Expression {
             else {
                 throw std::runtime_error("Type mismatch in comparison expression. Only support int and float types.");
             }
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -263,6 +303,10 @@ class TermExpression : public Expression {
                 throw std::runtime_error("Type mismatch in term expression. Only support int and float types.");
             }
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class FactorExpression : public Expression {
@@ -293,6 +337,10 @@ class FactorExpression : public Expression {
                 throw std::runtime_error("Type mismatch in factor expression. Only support int and float types.");
             }
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class PrimaryExpression : public Expression {
@@ -314,6 +362,10 @@ class PrimaryExpression : public Expression {
             // If not found, handle literals or throw an error if it should be a declared variable
             throw std::runtime_error("PrimaryExpression " + name + " type not found.");
             }
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 
 };
@@ -345,6 +397,10 @@ class BinaryExpression : public Expression {
                 throw std::runtime_error("Type mismatch in binary expression. Only support int and float types.");
             }
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class UnaryExpression : public Expression {
@@ -364,6 +420,10 @@ class UnaryExpression : public Expression {
 
         return exprType;
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 //Statements
@@ -379,6 +439,10 @@ class LoopStatement : public Statement {
         std::string toString() const override {
             return "LoopStatement[" + start->toString() + " " + end->toString() + " " + body->toString() + "]";
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class PrintStatement : public Statement {
@@ -389,6 +453,10 @@ class PrintStatement : public Statement {
         
         std::string toString() const override {
             return "PrintStatement[" + expr->toString() + "]";
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -401,6 +469,10 @@ class WhileLoopStatement : public Statement {
         
         std::string toString() const override {
             return "WhileLoopStatement[" + condition->toString() + " " + body->toString() + "]";
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -415,6 +487,10 @@ class ForLoopStatement : public Statement {
         std::string toString() const override {
             return "ForLoopStatement[" + start->toString() + " " + end->toString() + " " + body->toString() + "]";
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class AssignmentStatement : public Statement {
@@ -426,6 +502,10 @@ class AssignmentStatement : public Statement {
         
         std::string toString() const override {
             return "AssignmentStatement[" + name + " = " + expression->toString() + "]";
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -440,6 +520,10 @@ class IfStatement : public Statement {
         std::string toString() const override {
             return "IfStatement[" + condition->toString() + " " + body->toString() + "]";
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class ElseStatement : public Statement {
@@ -451,16 +535,25 @@ class ElseStatement : public Statement {
         std::string toString() const override {
             return "ElseStatement[" + body->toString() + "]";
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class ReturnStatement : public Statement {
     public:
         std::unique_ptr<Expression> expression;
+
         ReturnStatement(std::unique_ptr<Expression> expr)
             : expression(std::move(expr)) {}
         
         std::string toString() const override {
             return "ReturnStatement[" + expression->toString() + "]";
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -478,6 +571,10 @@ class BlockStatement : public Statement {
             }
             return result;
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class ExpressionStatement : public Statement {
@@ -488,6 +585,10 @@ class ExpressionStatement : public Statement {
         
         std::string toString() const override {
             return "ExpressionStatement[" + expression->toString() + "]";
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 
@@ -509,6 +610,10 @@ class FunctionDefinition : public Function {
             }
             return "function " + name + "(" + params + ") -> " + returnType + " {}";
         }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
 };
 
 class FunctionCall : public Function { //we only accept statements for function calls like: call add(3,2);
@@ -525,6 +630,10 @@ class FunctionCall : public Function { //we only accept statements for function 
                 args += ",";
             }
             return "call " + name + "(" + args + ")";
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
         }
 };
 #endif // ASTNODES_H

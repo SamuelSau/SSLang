@@ -17,11 +17,11 @@ include_directories(
 add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)
 
 # Test Executable
-add_executable(SSLangDeclareTests tests/declaration_testing/declaration_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
-add_executable(SSLangExpressionTests tests/expression_testing/expression_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
-add_executable(SSLangStatementTests tests/statement_testing/statement_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
-add_executable(SSLangFunctionTests tests/function_testing/function_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
-add_executable(SSLangProgramTests tests/program_testing/program_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp)
+add_executable(SSLangDeclareTests tests/declaration_testing/declaration_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)
+add_executable(SSLangExpressionTests tests/expression_testing/expression_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)
+add_executable(SSLangStatementTests tests/statement_testing/statement_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)
+add_executable(SSLangFunctionTests tests/function_testing/function_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)
+add_executable(SSLangProgramTests tests/program_testing/program_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)
 
 # Custom target for running tests
 
