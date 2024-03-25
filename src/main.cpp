@@ -30,21 +30,9 @@ int main() {
 
   parser.parseProgram();
 
-
   SymbolTable symbolTable;
   
   symbolTable.enterScope();
-
-  //symbolTable.addVariable("x", "int");
-  // symbolTable.addVariable("y", "int");
-
-  // if (!symbolTable.addVariable("x", "int")) {
-  //   std::cout << "Variable x already declared" << std::endl;
-  //   std::cout << "Variable x is declared in scope: " << symbolTable.getSymbolInfo("x")->scopeId << std::endl;
-  // }
-  // else {
-  //   std::cout << "Variable is not declared" << std::endl;
-  // }
 
   SemanticAnalyzer semanticAnalyzer(symbolTable);
   semanticAnalyzer.visit(program.get());

@@ -4,6 +4,7 @@
 class Expression;
 class IntDeclaration;
 class FloatDeclaration;
+class BoolDeclaration;
 class StringDeclaration;
 class AssignmentExpression;
 class LogicOrExpression;
@@ -34,6 +35,7 @@ public:
     virtual void visit(const IntDeclaration* decl) = 0;
     virtual void visit(const FloatDeclaration* decl) = 0;
     virtual void visit(const StringDeclaration* decl) = 0;
+    virtual void visit(const BoolDeclaration* decl) = 0;
 
     virtual void visit(const AssignmentExpression* expr) = 0;
     virtual void visit(const LogicOrExpression* expr) = 0;
@@ -63,5 +65,6 @@ public:
 
     virtual ~IVisitor() = default;
 };
+
 
 #endif // VISITOR_H

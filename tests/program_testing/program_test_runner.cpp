@@ -6,6 +6,8 @@
 
 #include "lexer/Lexer.h"
 #include "parser/Parser.h"
+#include "symbolTable/SymbolTable.h"
+#include "semanticAnalyzer/SemanticAnalyzer.h"
 
 void runTestForFile(const std::string& filePath) {
     std::ifstream testFile(filePath);
@@ -26,6 +28,19 @@ void runTestForFile(const std::string& filePath) {
 
     try {
         auto program = parser.parseProgram();
+        
+        std::cout << "Parsed program as this: " << program->toString() << std::endl;    
+
+        SymbolTable symbolTable;
+
+        SemanticAnalyzer semanticAnalyzer(symbolTable);
+
+        semanticAnalyzer.visit(program.get());
+
+        symbolTable.printContents();
+
+        std::cout << "Program is semantically correct" << std::endl;
+
         // If the parsing succeeds, it means the entire program (file content) is valid.
         std::cout << "\033[32mTest Passed\033[0m" << " in " << filename << std::endl;
     } catch (const std::exception& e) {

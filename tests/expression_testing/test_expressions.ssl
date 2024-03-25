@@ -26,3 +26,4 @@ int k = 2;
 =x y;
 c = (x - 2)
 c = x - 2
+str s = "Hello World";

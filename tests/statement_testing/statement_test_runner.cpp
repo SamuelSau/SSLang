@@ -16,7 +16,10 @@ void runTestForLine(const std::string& line, int lineNumber, const std::string& 
     std::string filename = testPath.filename().string();
 
     try {
-        auto declaration = parser.parseStatement();
+        auto statement = parser.parseStatement();
+
+        std::cout << "Parsed statement as "  << statement->toString() << std::endl;
+
         std::cout << "\033[32mTest Passed\033[0m"  << " Line: " << lineNumber << " in " << filename << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "\033[31mTest Failed\033[0m" << " Line: " << lineNumber << " in " << filename << " with error: " << e.what() << std::endl;

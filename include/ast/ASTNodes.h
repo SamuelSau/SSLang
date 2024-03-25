@@ -4,9 +4,11 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <regex>
+#include <sstream>
 
 #include "symbolTable/SymbolTable.h"
-#include "semanticAnalyzer/SemanticAnalyzer.h"
+#include "visitor/Visitor.h"
 
 class IVisitor;
 
@@ -73,7 +75,7 @@ class IntDeclaration : public Declaration {
             : name(std::move(name)), number(std::move(number)) {}
 
         std::string toString() const override {
-            return "IntDeclaration[" + name + " = " + number + "]";
+            return "IntDeclaration(" + name + " = " + number + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -90,7 +92,7 @@ class FloatDeclaration : public Declaration {
             : name(std::move(name)), number(std::move(number)) {}
         
         std::string toString() const override {
-            return "FloatDeclaration[" + name + " = " + number + "]";
+            return "FloatDeclaration(" + name + " = " + number + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -107,13 +109,31 @@ class StringDeclaration : public Declaration {
             : name(std::move(name)), value(std::move(value)) {}
         
         std::string toString() const override {
-            return "StringDeclaration[" + name + " = " + value + "]";
+            return "StringDeclaration(" + name + " = " + value + ")";
         }
 
         void accept(IVisitor* visitor) const override {
             visitor->visit(this);
         }
 };
+
+class BoolDeclaration : public Declaration {
+    public:
+        std::string name;
+        std::string value;
+
+        BoolDeclaration(std::string name, std::string value)
+            : name(std::move(name)), value(std::move(value)) {}
+        
+        std::string toString() const override {
+            return "BoolDeclaration(" + name + " = " + value + ")";
+        }
+
+        void accept(IVisitor* visitor) const override {
+            visitor->visit(this);
+        }
+};
+
 
 //Expressions
 class AssignmentExpression : public Expression {
@@ -125,7 +145,7 @@ class AssignmentExpression : public Expression {
             : name(std::move(name)), expression(std::move(expr)) {}
 
         std::string toString() const override {
-            return "aE[" + name + " = " + expression->toString() + ";" + "]";
+            return "aE(" + name + " = " + expression->toString() + ";" + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
@@ -151,7 +171,7 @@ class LogicOrExpression : public Expression {
             : left(std::move(left)), right(std::move(right)) {}
 
         std::string toString() const override {
-            return "loE[" + left->toString() + " " + right->toString() + "]";
+            return "loE(" + left->toString() + " " + right->toString() + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
@@ -181,7 +201,7 @@ class LogicAndExpression : public Expression {
             : left(std::move(left)), right(std::move(right)) {}
 
         std::string toString() const override {
-            return "laE[" + left->toString() + " " + right->toString() + "]";
+            return "laE(" + left->toString() + " " + right->toString() + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
@@ -212,7 +232,7 @@ class EqualityExpression : public Expression {
             : left(std::move(left)), right(std::move(right)), op(op) {}
 
         std::string toString() const override {
-            return "eE[" + left->toString() + " " + op + " " + right->toString() + "]";
+            return "eE(" + left->toString() + " " + op + " " + right->toString() + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
@@ -220,17 +240,9 @@ class EqualityExpression : public Expression {
             auto rightType = right->getType(symbolTable);
 
             // Simplified example: assume all operators work with integers only
-            if (leftType == "int" && rightType == "int") {
-                return "int";
-            }
-            else if (leftType == "float" && rightType == "float") {
-                return "float";
-            }
-            
-            else if (leftType == "string" && rightType == "string") {
-                return "string";
-            }
-            
+            if ((leftType == "int" && rightType == "int") || (leftType == "float" && rightType == "float")) {
+                return "bool";
+            }            
             else {
                 throw std::runtime_error("Type mismatch in equality expression. Only support int and float types.");
             }
@@ -251,7 +263,7 @@ class ComparisonExpression : public Expression {
             : left(std::move(left)), right(std::move(right)), op(op) {}
 
         std::string toString() const override {
-            return "cE[" + left->toString() + " " + op + " " + right->toString() + "]";
+            return "cE(" + left->toString() + " " + op + " " + right->toString() + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
@@ -259,14 +271,11 @@ class ComparisonExpression : public Expression {
             auto rightType = right->getType(symbolTable);
 
             // Simplified example: assume all operators work with integers only
-            if (leftType == "int" && rightType == "int") {
-                return "int";
-            }
-            else if (leftType == "float" && rightType == "float") {
-                return "float";
-            }
+            if ((leftType == "int" && rightType == "int") || (leftType == "float" && rightType == "float")) {
+                return "bool"; // Comparison expressions result in a boolean
+            } 
             else {
-                throw std::runtime_error("Type mismatch in comparison expression. Only support int and float types.");
+                throw std::runtime_error("Type mismatch in comparison expression. Both operands must be of the same type and either int or float.");
             }
         }
 
@@ -285,7 +294,7 @@ class TermExpression : public Expression {
             : left(std::move(left)), right(std::move(right)), op(op) {}
 
         std::string toString() const override {
-            return "tE[" + left->toString() + " " + op + " " + right->toString() + "]";
+            return "tE(" + left->toString() + " " + op + " " + right->toString() + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
@@ -319,7 +328,7 @@ class FactorExpression : public Expression {
             : left(std::move(left)), right(std::move(right)), op(op) {}
 
         std::string toString() const override {
-            return "fE[" + left->toString() + " " + op + " " + right->toString() + "]";
+            return "fE(" + left->toString() + " " + op + " " + right->toString() + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
@@ -350,24 +359,39 @@ class PrimaryExpression : public Expression {
             : name(std::move(name)) {}
 
         std::string toString() const override {
-            return "pE[" + name + "]";
+            return "pE(" + name + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
-        auto symbolInfo = symbolTable.getSymbolInfo(name);
-        if (symbolInfo.has_value()) {
-            return symbolInfo->type; // Variable's type from the symbol table
-        } 
-        else {
-            // If not found, handle literals or throw an error if it should be a declared variable
-            throw std::runtime_error("PrimaryExpression " + name + " type not found.");
+            if (std::regex_match(name, std::regex("^[-+]?[0-9]+$"))) {
+                return "int";
+            }
+            // Check if the primary expression is a float
+            else if (std::regex_match(name, std::regex("^[-+]?[0-9]*\\.[0-9]+$"))) {
+                return "float";
+            }
+            // Check if the primary expression is a string literal
+            else if (std::regex_match(name, std::regex("^\".*\"$"))) {
+                return "string";
+            }
+            // Check if the primary expression is a boolean literal
+            else if (name == "true" || name == "false") {
+                return "bool";
+            }
+            // If it's not a recognized literal, assume it's an identifier and check if declared
+            else {
+                auto symbolInfo = symbolTable.getSymbolInfo(name);
+                if (!symbolInfo.has_value()) {
+                    throw std::runtime_error("pE '" + name + "' not declared.");
+                }
+                //std::cout << "Symbol type in primary expression: " << symbolInfo->type << "\n"; // Print the type of the symbol
+                return symbolInfo->type;
             }
         }
 
         void accept(IVisitor* visitor) const override {
             visitor->visit(this);
         }
-
 };
 
 class BinaryExpression : public Expression {
@@ -379,7 +403,7 @@ class BinaryExpression : public Expression {
             : left(std::move(left)), right(std::move(right)), op(op) {}
         
         std::string toString() const override {
-            return "bE[" + left->toString() + " " + op + " " + right->toString() + "]";
+            return "bE(" + left->toString() + " " + op + " " + right->toString() + ")";
         }
         
         std::string getType(SymbolTable& symbolTable) const override {
@@ -412,7 +436,7 @@ class UnaryExpression : public Expression {
             : expr(std::move(expr)), op(op) {}
 
         std::string toString() const override {
-            return "uE[" + op + expr->toString() + "]";
+            return "uE(" + op + expr->toString() + ")";
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
@@ -429,15 +453,15 @@ class UnaryExpression : public Expression {
 //Statements
 class LoopStatement : public Statement {
     public:
-        std::unique_ptr<Expression> start; // For range-based or initialization expression
-        std::unique_ptr<Expression> end;   // For condition expression
+        std::unique_ptr<Expression> start;
+        std::unique_ptr<Expression> end;   
         std::unique_ptr<Statement> body;
 
         LoopStatement(std::unique_ptr<Expression> start, std::unique_ptr<Expression> end, std::unique_ptr<Statement> body)
             : start(std::move(start)), end(std::move(end)), body(std::move(body)) {}
         
         std::string toString() const override {
-            return "LoopStatement[" + start->toString() + " " + end->toString() + " " + body->toString() + "]";
+            return "LoopStatement(" + start->toString() + " " + end->toString() + " " + body->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -452,7 +476,7 @@ class PrintStatement : public Statement {
             : expr(std::move(expr)) {}
         
         std::string toString() const override {
-            return "PrintStatement[" + expr->toString() + "]";
+            return "PrintStatement(" + expr->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -468,7 +492,7 @@ class WhileLoopStatement : public Statement {
             : condition(std::move(condition)), body(std::move(body)) {}
         
         std::string toString() const override {
-            return "WhileLoopStatement[" + condition->toString() + " " + body->toString() + "]";
+            return "WhileLoopStatement(" + condition->toString() + " " + body->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -480,12 +504,12 @@ class ForLoopStatement : public Statement {
     public:
         std::unique_ptr<Expression> start;
         std::unique_ptr<Expression> end;
-        std::unique_ptr<Expression> body;
-        ForLoopStatement(std::unique_ptr<Expression> start, std::unique_ptr<Expression> end, std::unique_ptr<Expression> body)
+        std::unique_ptr<Statement> body;
+        ForLoopStatement(std::unique_ptr<Expression> start, std::unique_ptr<Expression> end, std::unique_ptr<Statement> body)
             : start(std::move(start)), end(std::move(end)), body(std::move(body)) {}
         
         std::string toString() const override {
-            return "ForLoopStatement[" + start->toString() + " " + end->toString() + " " + body->toString() + "]";
+            return "ForLoopStatement(" + start->toString() + " " + end->toString() + " " + body->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -501,7 +525,7 @@ class AssignmentStatement : public Statement {
             : name(std::move(name)), expression(std::move(expr)) {}
         
         std::string toString() const override {
-            return "AssignmentStatement[" + name + " = " + expression->toString() + "]";
+            return "AssignmentStatement(" + name + " = " + expression->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -518,7 +542,7 @@ class IfStatement : public Statement {
             : condition(std::move(condition)), body(std::move(body)) {}
         
         std::string toString() const override {
-            return "IfStatement[" + condition->toString() + " " + body->toString() + "]";
+            return "IfStatement(" + condition->toString() + " " + body->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -533,7 +557,7 @@ class ElseStatement : public Statement {
             : body(std::move(body)) {}
         
         std::string toString() const override {
-            return "ElseStatement[" + body->toString() + "]";
+            return "ElseStatement(" + body->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -549,7 +573,7 @@ class ReturnStatement : public Statement {
             : expression(std::move(expr)) {}
         
         std::string toString() const override {
-            return "ReturnStatement[" + expression->toString() + "]";
+            return "ReturnStatement(" + expression->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -565,9 +589,9 @@ class BlockStatement : public Statement {
             : statements(std::move(statements)) {}
         
         std::string toString() const override {
-            std::string result = "BlockStatement:\n";
+            std::string result = "BlockStatement: ";
             for (const auto& stmt : statements) {
-                result += stmt->toString() + "\n";
+                result += stmt->toString() + " ";
             }
             return result;
         }
@@ -584,7 +608,7 @@ class ExpressionStatement : public Statement {
             : expression(std::move(expr)) {}
         
         std::string toString() const override {
-            return "ExpressionStatement[" + expression->toString() + "]";
+            return "ExpressionStatement(" + expression->toString() + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -596,19 +620,27 @@ class ExpressionStatement : public Statement {
 class FunctionDefinition : public Function {
     public:
         std::string name;
-        std::vector<std::string> parameters;
+        std::vector<ParamInfo> parameters;
         std::string returnType;
         std::vector<std::unique_ptr<Statement>> body;
         
-        FunctionDefinition(std::string name, std::vector<std::string> parameters, std::string returnType, std::vector<std::unique_ptr<Statement>> body)
+        FunctionDefinition(std::string name, std::vector<ParamInfo> parameters, std::string returnType, std::vector<std::unique_ptr<Statement>> body)
             : name(std::move(name)), parameters(std::move(parameters)), returnType(std::move(returnType)), body(std::move(body)) {}
         
         std::string toString() const override {
-            std::string params;
-            for (const auto& param : parameters) {
-                params += ",";
+            std::stringstream ss;
+            ss << "FunctionDefinition " << name << "(";
+            for (size_t i = 0; i < parameters.size(); ++i) {
+                ss << parameters[i].name << ": " << parameters[i].type;
+                if (i < parameters.size() - 1) ss << ", ";
             }
-            return "function " + name + "(" + params + ") -> " + returnType + " {}";
+            ss << ") -> " << returnType << " {\n";
+            for (const auto& stmt : body) {
+                ss << "\t" << stmt->toString() << "\n"; // Indent function body content for readability
+            }
+            ss << "}";
+
+        return ss.str();
         }
 
         void accept(IVisitor* visitor) const override {
@@ -627,9 +659,10 @@ class FunctionCall : public Function { //we only accept statements for function 
         std::string toString() const override {
             std::string args;
             for (const auto& arg : arguments) {
-                args += ",";
-            }
-            return "call " + name + "(" + args + ")";
+                if (!args.empty()) args += ", "; // Add a comma separator between arguments, but not before the first one
+                    args += arg->toString(); // Call toString() on the pointed-to Expression
+                }
+            return "FunctionCall " + name + "(" + args + ")";
         }
 
         void accept(IVisitor* visitor) const override {

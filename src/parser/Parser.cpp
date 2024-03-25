@@ -15,8 +15,10 @@ void Parser::advance() {
    if (nextToken.kind() == Token::Kind::Uninitialized) { // Assume such a kind exists for demonstration
         nextToken = lexer.next(); // Ensure nextToken has initial value
     }
+    
     currentToken = std::move(nextToken); // Safely move now that nextToken is guaranteed to have been loaded
-    nextToken = lexer.next(); // Preload the next token
+    nextToken = lexer.next(); 
+    
 }
 
 void Parser::consume(Token::Kind kind, const std::string& errorMessage) {
@@ -43,8 +45,12 @@ std::unique_ptr<Declaration> Parser::parseDeclaration() {
     }
     else if (currentToken.is(Token::Kind::String)) {
         return parseStringDeclaration();
-    } 
-     else {
+    }
+
+    else if (currentToken.is(Token::Kind::Bool)) {
+        return parseBoolDeclaration(); 
+    }
+    else {
         throw std::runtime_error("Expected declaration type of either int, flt, or str.");
     }
 }
@@ -54,10 +60,20 @@ std::unique_ptr<Expression> Parser::parseExpression() {
     if (currentToken.is(Token::Kind::End)){
         throw std::runtime_error("Unexpected end of file. Expected expression.");
     }
-    else if (currentToken.is(Token::Kind::LeftParen)) { //in cases of log, if, while, for, etc.
-        consume(Token::Kind::LeftParen, "Expected '(' at the beginning of an expression.");
-        leftExp = parseExpression();  // Parse the expression inside the parentheses
-        consume(Token::Kind::RightParen, "Expected ')' at the end of a grouped expression.");
+    else if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String, Token::Kind::Bool)) {
+        throw std::runtime_error("Forbidden keyword for expressions! Should not be able to parse as expression! Please use \"int\", \"flt\", \"str\", \"bool\" for declarations.");
+    }
+    else if (currentToken.is(Token::Kind::Return)){
+        throw std::runtime_error("Not allowed to return without it being in a function definition");
+    }
+    else if (currentToken.is_one_of(Token::Kind::While, Token::Kind::For)){
+        throw std::runtime_error("Forbidden keyword for expressions! Please use \"loop\" for while and for.");
+    }
+    else if (currentToken.is_one_of(Token::Kind::Function, Token::Kind::Call)){
+        throw std::runtime_error("No function definitions or calls allowed in expressions. Only reserved for statements.");
+    }
+    else if (currentToken.is(Token::Kind::Comment)){
+        advance();
     }
     // Start with unary or primary expressions
     else if (currentToken.is(Token::Kind::Identifier) && peekToken().is(Token::Kind::Equal)) {
@@ -74,10 +90,11 @@ std::unique_ptr<Expression> Parser::parseExpression() {
         leftExp = parseComparison();
     }
     else {
+        
         if (currentToken.is(Token::Kind::End)){
             return leftExp;
         }
-        // Default to primary for numbers, literals, etc.
+        
         leftExp = parsePrimary();
     }
     return leftExp;
@@ -106,6 +123,16 @@ std::unique_ptr<Statement> Parser::parseStatement() {
         }
         else if (currentToken.is(Token::Kind::Print)) {
             throw std::runtime_error("Forbidden keyword for printing statements. Please use \"log()\"");
+        }
+        else if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::String, Token::Kind::Float, Token::Kind::Bool)) {
+            throw std::runtime_error("Forbidden keyword for statements! Should not be able to parse as statement! Please use \"int\", \"flt\", \"str\", \"bool\" for declarations.");
+        }
+        else if (currentToken.is(Token::Kind::Comment)){
+           advance();
+        }
+        else {
+            auto expr = parseExpression();
+            return std::make_unique<ExpressionStatement>(std::move(expr));
         }
         auto expr = parseExpression();
         return std::make_unique<ExpressionStatement>(std::move(expr));

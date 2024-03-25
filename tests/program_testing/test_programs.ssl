@@ -1,30 +1,25 @@
-flt x = 0.0002; 
-str s = "Hello World";
-int y = 2;
+flt q = 0.3;
+q = 7.0;
+bool isDeclared = false;
+int x = 2;
+int y = 3;
+int p = 7;
+int Q = 9;
+int z = 0;
 int t = 2;
-x = 7;
-t = 100.0;
-function add(x, y) -> int { 
-    log(x);
-    loop (x > y){
-        if (3 > not y) {
-            ret(x);
-        }
-        else { 
+log(x);
+str informalGreeting = "sup";
+
+function add(int: x, int: y) -> int { 
+    log(informalGreeting);
+    loop(x > y){
+        if (y equals 3) {
             ret(t);
         }
-    }
-    //for loop
-    loop range(2,3){ 
-        if (y equals x){
-            ret(true);
+        //if y doesnt equal to 3!
+         else {
+            ret(p);
         }
-        ret(false);
     }
-    x = x - 1;
-}
-
-if (t notEquals x){
-    ret(false);
 }
 call add(x, y);

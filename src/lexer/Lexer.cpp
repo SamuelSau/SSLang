@@ -175,22 +175,34 @@ Token Lexer::number() noexcept {
 }
 
 Token Lexer::slash_or_comment() noexcept {
-  const char* start = m_beg;
-  get();
-  if (peek() == '/') {
-    get();
-    start = m_beg;
-    while (peek() != '\0') {
-      if (get() == '\n') {
-        return Token(Token::Kind::Comment, start,
-                     std::distance(start, m_beg) - 1);
-      }
+  // const char* start = m_beg;
+  // get();
+  // if (peek() == '/') {
+  //   get();
+  //   start = m_beg;
+  //   while (peek() != '\0') {
+  //     if (get() == '\n') {
+  //       return Token(Token::Kind::Comment, start,
+  //                    std::distance(start, m_beg) - 1);
+  //     }
+  //   }
+  //   return Token(Token::Kind::Unexpected, m_beg, 1);
+  // } else {
+  //   return Token(Token::Kind::Slash, start, 1);
+  // }
+    get(); // Consume the first slash
+    if (peek() == '/') { // Confirm it's a line comment
+        while (peek() != '\0' && peek() != '\n') {
+          get(); // Consume all characters until the end of line or end of file
+        }
+        return next(); // Recursively call next() to get the next valid token after the comment
+    } 
+    
+    else {
+        return Token(Token::Kind::Slash, m_beg - 1, 1); // If it's not a comment, return the slash token
     }
-    return Token(Token::Kind::Unexpected, m_beg, 1);
-  } else {
-    return Token(Token::Kind::Slash, start, 1);
-  }
 }
+
 
 Token Lexer::string_literal() noexcept {
     const char* start = ++m_beg; // Skip the initial double-quote

@@ -30,6 +30,7 @@ public:
     std::unique_ptr<Declaration> parseIntDeclaration(); //int x = 5;
     std::unique_ptr<Declaration> parseFloatDeclaration(); //flt x = 5.0;
     std::unique_ptr<Declaration> parseStringDeclaration(); //str x = "hello";
+    std::unique_ptr<Declaration> parseBoolDeclaration(); //bool x = true;
 
     // Expression parsing
     std::unique_ptr<Expression> parseExpression(); 
