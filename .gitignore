@@ -25,6 +25,8 @@ build/
 out/
 Release/
 Debug/
+build-project-debug/
+build-project-release/
 
 # CMake generated files/directories
 CMakeFiles/
@@ -40,6 +42,10 @@ Makefile
 /vcpkg_installed/
 !vcpkg.json
 !vcpkg-configuration.json
+
+# Ninja build files
+build.ninja
+compile_commands.json
 
 # IDEs and editors
 .vs/

@@ -7,8 +7,12 @@
 #include <regex>
 #include <sstream>
 
-#include "symbolTable/SymbolTable.h"
-#include "visitor/Visitor.h"
+//#include "symbolTable/SymbolTable.h"
+//#include "visitor/Visitor.h"
+#include "../symbolTable/SymbolTable.h"
+#include "../visitor/Visitor.h"
+
+
 
 class IVisitor;
 
@@ -152,6 +156,7 @@ class AssignmentExpression : public Expression {
         auto symbolInfo = symbolTable.getSymbolInfo(name);
         if (!symbolInfo.has_value()) {
             throw std::runtime_error("Variable " + name + " not declared.");
+
         }
         return symbolInfo->type;
         }
@@ -184,6 +189,7 @@ class LogicOrExpression : public Expression {
             }
             else {
                 throw std::runtime_error("Type mismatch in logical or expression. Only support boolean types.");
+
             }
         }
 
@@ -214,6 +220,8 @@ class LogicAndExpression : public Expression {
             }
             else {
                 throw std::runtime_error("Type mismatch in logical and expression. Only support boolean types.");
+
+                
             }
         }
 
@@ -245,6 +253,8 @@ class EqualityExpression : public Expression {
             }            
             else {
                 throw std::runtime_error("Type mismatch in equality expression. Only support int and float types.");
+
+
             }
         }
 
@@ -276,6 +286,8 @@ class ComparisonExpression : public Expression {
             } 
             else {
                 throw std::runtime_error("Type mismatch in comparison expression. Both operands must be of the same type and either int or float.");
+                
+
             }
         }
 
@@ -309,7 +321,8 @@ class TermExpression : public Expression {
                 return "float";
             }
             else {
-                throw std::runtime_error("Type mismatch in term expression. Only support int and float types.");
+               throw std::runtime_error("Type mismatch in term expression. Only support int and float types.");
+
             }
         }
 
@@ -343,7 +356,8 @@ class FactorExpression : public Expression {
                 return "float";
             }
             else {
-                throw std::runtime_error("Type mismatch in factor expression. Only support int and float types.");
+               throw std::runtime_error("Type mismatch in factor expression. Only support int and float types.");
+
             }
         }
 
@@ -363,15 +377,21 @@ class PrimaryExpression : public Expression {
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
-            if (std::regex_match(name, std::regex("^[-+]?[0-9]+$"))) {
+
+            //precompile regex
+            static const std::regex intRegex("^[-+]?[0-9]+$");
+            static const std::regex floatRegex("^[-+]?[0-9]*\\.[0-9]+$");
+            static const std::regex stringRegex("^\".*\"$");
+
+            if (std::regex_match(name, intRegex)) {
                 return "int";
             }
             // Check if the primary expression is a float
-            else if (std::regex_match(name, std::regex("^[-+]?[0-9]*\\.[0-9]+$"))) {
+            else if (std::regex_match(name, floatRegex)) {
                 return "float";
             }
             // Check if the primary expression is a string literal
-            else if (std::regex_match(name, std::regex("^\".*\"$"))) {
+            else if (std::regex_match(name, stringRegex)) {
                 return "string";
             }
             // Check if the primary expression is a boolean literal
@@ -382,7 +402,7 @@ class PrimaryExpression : public Expression {
             else {
                 auto symbolInfo = symbolTable.getSymbolInfo(name);
                 if (!symbolInfo.has_value()) {
-                    throw std::runtime_error("pE '" + name + "' not declared.");
+                   throw std::runtime_error("pE '" + name + "' not declared.");
                 }
                 //std::cout << "Symbol type in primary expression: " << symbolInfo->type << "\n"; // Print the type of the symbol
                 return symbolInfo->type;
@@ -418,7 +438,8 @@ class BinaryExpression : public Expression {
                 return "float";
             }
             else {
-                throw std::runtime_error("Type mismatch in binary expression. Only support int and float types.");
+
+               throw std::runtime_error("Type mismatch in binary expression. Only support int and float types.");
             }
         }
 

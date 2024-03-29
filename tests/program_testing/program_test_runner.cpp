@@ -18,7 +18,7 @@ void runTestForFile(const std::string& filePath) {
 
     // Read the entire file into a string
     std::string fileContent((std::istreambuf_iterator<char>(testFile)),
-                            (std::istreambuf_iterator<char>()));
+        (std::istreambuf_iterator<char>()));
 
     // Initialize the lexer and parser with the file content
     Lexer lexer(fileContent.c_str());
@@ -28,8 +28,8 @@ void runTestForFile(const std::string& filePath) {
 
     try {
         auto program = parser.parseProgram();
-        
-        std::cout << "Parsed program as this: " << program->toString() << std::endl;    
+
+        std::cout << "Parsed program as this: " << program->toString() << std::endl;
 
         SymbolTable symbolTable;
 
@@ -43,7 +43,8 @@ void runTestForFile(const std::string& filePath) {
 
         // If the parsing succeeds, it means the entire program (file content) is valid.
         std::cout << "\033[32mTest Passed\033[0m" << " in " << filename << std::endl;
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         std::cerr << "\033[31mTest Failed\033[0m" << " in " << filename << " with error: " << e.what() << std::endl;
     }
 }
@@ -51,7 +52,7 @@ void runTestForFile(const std::string& filePath) {
 int main() {
     // Adjusted for testing entire files rather than line-by-line
     std::vector<std::string> testFiles = {
-        "../../../../tests/program_testing/test_programs.ssl",
+        "../../tests/program_testing/test_programs.ssl",
     };
 
     for (const auto& filePath : testFiles) {

@@ -6,7 +6,8 @@
 #include <string_view>
 #include <unordered_map>
 
-#include "lexer/Lexer.h"
+//#include "lexer/Lexer.h"
+#include "../../include/lexer/Lexer.h"
 
 Token::Token(Kind kind) noexcept : m_kind{kind} {}
 
@@ -175,21 +176,6 @@ Token Lexer::number() noexcept {
 }
 
 Token Lexer::slash_or_comment() noexcept {
-  // const char* start = m_beg;
-  // get();
-  // if (peek() == '/') {
-  //   get();
-  //   start = m_beg;
-  //   while (peek() != '\0') {
-  //     if (get() == '\n') {
-  //       return Token(Token::Kind::Comment, start,
-  //                    std::distance(start, m_beg) - 1);
-  //     }
-  //   }
-  //   return Token(Token::Kind::Unexpected, m_beg, 1);
-  // } else {
-  //   return Token(Token::Kind::Slash, start, 1);
-  // }
     get(); // Consume the first slash
     if (peek() == '/') { // Confirm it's a line comment
         while (peek() != '\0' && peek() != '\n') {
@@ -216,13 +202,11 @@ Token Lexer::string_literal() noexcept {
     }
 
     if (*m_beg == '"') {
-        // Create a StringLiteral token from the contents between the quotes
+        
         Token token(Token::Kind::StringLiteral, start, m_beg);
         m_beg++; // Skip the closing double-quote
         return token;
     } else {
-        // Handle the error case (e.g., EOF before closing quote)
-        // This could return an Unexpected token or similar error token
         return Token(Token::Kind::Unexpected, start, m_beg);
     }
 }
@@ -259,21 +243,4 @@ bool is_identifier_char(char c) noexcept {
     result = true;
   }
   return result;
-}
-
-//order matters in enum class
-std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
-  static const char* const names[]{
-      "Number",      "Identifier",  "LeftParen",  "RightParen", "LeftSquare",
-      "RightSquare", "LeftCurly",   "RightCurly", "LessThan",   "GreaterThan",
-      "Equal",       "Plus",        "Minus",      "Asterisk",   "Slash",
-      "Hash",        "Dot",         "Comma",      "Colon",      "Semicolon",
-      "SingleQuote", "DoubleQuote", "Comment",    "Pipe",       "End",
-      "Unexpected",  "Function",    "If",         "Else",       "Range"     
-      "Return",      "Loop",         "Int",        "Float",      "String", 
-      "Bool",        "Arrow",      "StringLiteral", "FloatLiteral",
-      "Log",         "Not",         "Equals",     "NotEquals",  "Or", "And",
-      "Uninitialized", "For",       "While",     "Print",     "Call"
-  };
-  return os << names[static_cast<int>(kind)];
 }

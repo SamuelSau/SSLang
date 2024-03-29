@@ -1,5 +1,6 @@
-#include "symbolTable/SymbolTable.h"
+//#include "symbolTable/SymbolTable.h"
 #include <iostream>
+#include "../../include/symbolTable/SymbolTable.h"
 
 void SymbolTable::enterScope() {
     currentScopeId++;
@@ -19,6 +20,7 @@ bool SymbolTable::addVariable(const std::string& name, const std::string& type) 
     //std::cout << "Adding a variable with name: " << name << " and type: " << type << "\n";
     
     if (scopes.empty()) {
+        //std::cout << "scopes is empty in addVariable" << std::endl;
         return false;
     }
 
@@ -29,34 +31,39 @@ bool SymbolTable::addVariable(const std::string& name, const std::string& type) 
 
     SymbolInfo info = {type, currentScopeId};
     currentScope[name] = info;
-    //std::cout << "printing info: " << info.type << " " << info.scopeId << "\n";
+    //std::cout << "printing info: " << "type: " + info.type << " scopeId: " << info.scopeId << "\n";
     return true;
 }
 
 bool SymbolTable::isDeclared(const std::string& name) {
-    auto tempScopes = scopes; 
+    //std::cout << "Checking if " + name + " has been redeclared" << std::endl;
+    auto tempScopes = scopes;
     while (!tempScopes.empty()) {
-        const auto& scope = tempScopes.top();
+        auto& scope = tempScopes.top();
         if (scope.find(name) != scope.end()) {
+            //std::cout << " Variable has been redeclared: " + name << std::endl;
             return true; // Found the variable in a scope
         }
         tempScopes.pop();
     }
+    //std::cout << "Variable not redeclared: " + name << std::endl;
     return false;
 }
 
 std::optional<SymbolInfo> SymbolTable::getSymbolInfo(const std::string& name) {
-    auto tempScopes = scopes; 
+    auto tempScopes = scopes;
     while (!tempScopes.empty()) {
-        const auto& scope = tempScopes.top();
+        auto scope = tempScopes.top();
         auto it = scope.find(name);
+
         if (it != scope.end()) {
-            // std::cout << "Found variable in scope: " << it->second.scopeId << "\n";
-            // std::cout << "The type of the variable is: " << it->second.type << "\n";
+             //std::cout << "Found variable in scope: " << it->second.scopeId << "\n";
+             //std::cout << "The type of the variable is: " << it->second.type << "\n";
             return it->second; 
         }
         tempScopes.pop();
     }
+    //std::cout << "Coundn't find the variable in getSymbolInfo: " + name << std::endl;
     return std::nullopt; // Variable not found
 }
 
@@ -83,11 +90,11 @@ void SymbolTable::printContents() const {
     size_t scopeLevel = tempStack.size();
     //std::cout << "Size of stack: " << tempStack.size() << "\n";
     while (!tempStack.empty()) {
-        const auto& scope = tempStack.top(); 
+        const auto& scope = tempStack.top();
         //std::cout << "Scope level " << scopeLevel << ":\n";
         
         for (const auto& [name, symbolInfo] : scope) {
-            //std::cout << "  Name: " << name << ", Type: " << symbolInfo.type << ", Scope ID: " << symbolInfo.scopeId << "\n";
+           // std::cout << "  Name: " << name << ", Type: " << symbolInfo.type << ", Scope ID: " << symbolInfo.scopeId << "\n";
         }
 
         tempStack.pop();

@@ -1,18 +1,22 @@
-#include "ast/ASTNodes.h"
-#include "parser/Parser.h"
+//#include "ast/ASTNodes.h"
+//#include "parser/Parser.h"
 
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <iostream>
+#include "../../include/ast/ASTNodes.h"
+#include "../../include/parser/Parser.h"
+
 
 
 std::unique_ptr<Declaration> Parser::parseIntDeclaration() {
     consume(Token::Kind::Int, "Expected 'int' for this declaration.");
 
     if (!currentToken.is(Token::Kind::Identifier)) {
-        throw std::runtime_error("Expected variable name after 'int'.");
+
+       throw std::runtime_error("Expected variable name after 'int'.");
     }
     std::string name = std::string(currentToken.lexeme());
     consume(Token::Kind::Identifier, "Expected identifier after 'int'.");
@@ -20,7 +24,9 @@ std::unique_ptr<Declaration> Parser::parseIntDeclaration() {
     consume(Token::Kind::Equal, "Expected '=' after variable name.");
     
     if (!currentToken.is(Token::Kind::Number)) {
-        throw std::runtime_error("Expected integer after '=' in variable declaration.");
+       throw std::runtime_error("Expected integer after '=' in variable declaration.");
+
+
     }
     std::string number = std::string(currentToken.lexeme());
     consume(Token::Kind::Number, "Expected integer after '='.");
@@ -34,7 +40,9 @@ std::unique_ptr<Declaration> Parser::parseFloatDeclaration() {
     consume(Token::Kind::Float, "Expected 'flt' for this declaration.");
     
     if (!currentToken.is(Token::Kind::Identifier)) {
-        throw std::runtime_error("Expected variable name after 'flt'.");
+       throw std::runtime_error("Expected variable name after 'flt'.");
+
+
     }
 
     std::string name = std::string(currentToken.lexeme());
@@ -43,7 +51,9 @@ std::unique_ptr<Declaration> Parser::parseFloatDeclaration() {
     consume(Token::Kind::Equal, "Expected '=' after variable name.");
     
     if (!currentToken.is(Token::Kind::FloatLiteral)) {
-        throw std::runtime_error("Expected floating-point number after '=' in variable declaration.");
+       throw std::runtime_error("Expected floating-point number after '=' in variable declaration.");
+
+
     }
     
     std::string number = std::string(currentToken.lexeme());
@@ -59,7 +69,9 @@ std::unique_ptr<Declaration> Parser::parseStringDeclaration(){
     consume(Token::Kind::String, "Expected 'str' for this declaration.");
 
     if (!currentToken.is(Token::Kind::Identifier)) {
-        throw std::runtime_error("Expected variable name after 'str'.");
+       throw std::runtime_error("Expected variable name after 'str'.");
+
+
     }
     std::string name = std::string(currentToken.lexeme());
     consume(Token::Kind::Identifier, "Expected identifier after 'str'.");
@@ -67,7 +79,9 @@ std::unique_ptr<Declaration> Parser::parseStringDeclaration(){
     consume(Token::Kind::Equal, "Expected '=' after variable name.");
     
     if (!currentToken.is(Token::Kind::StringLiteral)) {
-        throw std::runtime_error("Expected str after '=' in variable declaration.");
+       throw std::runtime_error("Expected str after '=' in variable declaration.");
+
+
     }
     std::string value = std::string(currentToken.lexeme());
     consume(Token::Kind::StringLiteral, "Expected a string literal after '='.");
@@ -80,13 +94,17 @@ std::unique_ptr<Declaration> Parser::parseStringDeclaration(){
 std::unique_ptr<Declaration> Parser::parseBoolDeclaration(){
     consume(Token::Kind::Bool, "Expected 'bool' for this declaration.");
     if (!currentToken.is(Token::Kind::Identifier)) {
-        throw std::runtime_error("Expected variable name after 'bool'.");
+       throw std::runtime_error("Expected variable name after 'bool'.");
+
+
     }
     std::string name = std::string(currentToken.lexeme());
     consume(Token::Kind::Identifier, "Expected identifier after 'bool'.");
     consume(Token::Kind::Equal, "Expected '=' after variable name.");
     if (!currentToken.is_one_of(Token::Kind::True, Token::Kind::False)) {
-        throw std::runtime_error("Expected boolean value after '=' in variable declaration.");
+       throw std::runtime_error("Expected boolean value after '=' in variable declaration.");
+
+
     }
     std::string value = std::string(currentToken.lexeme());
     consume(currentToken.kind(), "Expected boolean value after '='.");
@@ -113,8 +131,9 @@ std::unique_ptr<Expression> Parser::parseAssignment() {
             // Create an AssignmentExpression with the variable name and the expression
             return std::make_unique<AssignmentExpression>(std::move(variableName), std::move(right));
         } else {
-            // Error handling for missing '=' in an assignment
-            throw std::runtime_error("Expected '=' in assignment");
+           throw std::runtime_error("Expected '=' in assignment");
+
+
         }
     }
     if (currentToken.is(Token::Kind::Number) || currentToken.is(Token::Kind::FloatLiteral) || currentToken.is(Token::Kind::StringLiteral)) {
@@ -122,7 +141,9 @@ std::unique_ptr<Expression> Parser::parseAssignment() {
     }
     // If the left side isn't an identifier, handle according to your language's syntax rules
     // This might be an error, or you might have other forms of expressions that are valid here
-    throw std::runtime_error("Expected an identifier in assignment");
+   throw std::runtime_error("Expected an identifier in assignment");
+
+
 }
 
 std::unique_ptr<Expression> Parser::parseLogicOr() {
@@ -229,22 +250,34 @@ std::unique_ptr<Expression> Parser::parseBinary() {
 
 std::unique_ptr<Expression> Parser::parsePrimary() {
     if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String)) {
-        throw std::runtime_error("Forbidden keyword for expressions. Please use \"int\", \"flt\", or \"str\" for declarations.");
+       throw std::runtime_error("Forbidden keyword for expressions. Please use \"int\", \"flt\", or \"str\" for declarations.");
+
+
     }
     else if (currentToken.is_one_of(Token::Kind::While, Token::Kind::For)) {
-        throw std::runtime_error("Forbidden keyword for expressions. Please use \"loop\" for while and for.");
+       throw std::runtime_error("Forbidden keyword for expressions. Please use \"loop\" for while and for.");
+
+
     }
     else if (currentToken.is(Token::Kind::Loop)){
-        throw std::runtime_error("Loop keyword is not allowed in primary expressions.");
+       throw std::runtime_error("Loop keyword is not allowed in primary expressions.");
+
+
     }
     else if (currentToken.is(Token::Kind::Return)){
-        throw std::runtime_error("No returning for primary expressions");
+       throw std::runtime_error("No returning for primary expressions");
+
+
     }
     else if (currentToken.is_one_of(Token::Kind::Call, Token::Kind::Function)){
-        throw std::runtime_error("No functions calls or definitions in primary expressions.");
+       throw std::runtime_error("No functions calls or definitions in primary expressions.");
+
+
     }
     else if (currentToken.is_one_of(Token::Kind::LeftCurly, Token::Kind::RightCurly, Token::Kind::LeftParen, Token::Kind::RightParen, Token::Kind::LeftSquare, Token::Kind::RightSquare)) {
-        throw std::runtime_error("Forbidden keyword for expressions. Do not use curly braces, parentheses, or square brackets in expressions.");
+       throw std::runtime_error("Forbidden keyword for expressions. Do not use curly braces, parentheses, or square brackets in expressions.");
+
+
     }
     else if (currentToken.is(Token::Kind::Comment)) {
         advance();
@@ -273,7 +306,9 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
     }
 
     else {
-        throw std::runtime_error("Unexpected token in expression for parsing primary");
+       throw std::runtime_error("Unexpected token in expression for parsing primary");
+
+
     }
 
     return std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
@@ -290,7 +325,9 @@ std::unique_ptr<Statement> Parser::parseLoopStatement(){
         return parseWhileLoop();
     }
     else {
-        throw std::runtime_error("Expected either 'range' or '(' after 'loop'");
+       throw std::runtime_error("Expected either 'range' or '(' after 'loop'");
+
+
     }
 }
 
@@ -343,7 +380,9 @@ std::unique_ptr<Statement> Parser::parsePrintStatement() {
         auto expr = parseUnary();
         
         if (currentToken.is(Token::Kind::Comma) || currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash)) {
-            throw std::runtime_error("Only expected 1 expression to log.");
+           throw std::runtime_error("Only expected 1 expression to log.");
+
+
         }
 
         consume(Token::Kind::RightParen, "Expected ')' after logging expression.");
@@ -352,7 +391,9 @@ std::unique_ptr<Statement> Parser::parsePrintStatement() {
         return std::make_unique<PrintStatement>(std::move(expr));
     }
     else {
-        throw std::runtime_error("Unexpected token: Expected 'log' keyword.");
+       throw std::runtime_error("Unexpected token: Expected 'log' keyword.");
+
+
     }
 }
 
@@ -362,7 +403,9 @@ std::unique_ptr<Statement> Parser::parseReturnStatement() {
     auto expr = parseUnary();
 
     if (currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash) || currentToken.is(Token::Kind::Comma)){
-        throw std::runtime_error("Expected 1 expression after 'ret' keyword.");
+       throw std::runtime_error("Expected 1 expression after 'ret' keyword.");
+
+
     }
     consume(Token::Kind::RightParen, "Expected ')' after returning expression.");
     consume(Token::Kind::Semicolon, "Expected ';' after returning expression.");
@@ -371,11 +414,15 @@ std::unique_ptr<Statement> Parser::parseReturnStatement() {
 
 std::unique_ptr<Statement> Parser::parseIfStatement() {
     if (!currentToken.is(Token::Kind::If)){
-        throw std::runtime_error("Expected 'if' keyword.");
+       throw std::runtime_error("Expected 'if' keyword.");
+
+
     }
     consume(Token::Kind::If, "Expected 'if' keyword.");
     if (!currentToken.is(Token::Kind::LeftParen)){
-        throw std::runtime_error("Expected '(' after 'if' keyword.");
+       throw std::runtime_error("Expected '(' after 'if' keyword.");
+
+
     }
     consume(Token::Kind::LeftParen, "Expected '(' after 'if' keyword.");
     auto condition = parseExpression();
@@ -418,7 +465,9 @@ std::unique_ptr<Function> Parser::parseFunctionDefinition() {
         } 
         
         else if (!currentToken.is(Token::Kind::RightParen)) {
-            throw std::runtime_error("Expected ',' or ')' after parameter.");
+           throw std::runtime_error("Expected ',' or ')' after parameter.");
+
+
         }
     }
     consume(Token::Kind::RightParen, "Expected ')' after parameters.");
@@ -428,7 +477,9 @@ std::unique_ptr<Function> Parser::parseFunctionDefinition() {
     if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String)) {
         consume(currentToken.kind(), "Expected return type after '->' of which can be int, flt, or str.");
     } else {
-        throw std::runtime_error("Expected return type of either int, flt, or str");
+       throw std::runtime_error("Expected return type of either int, flt, or str");
+
+
     }
     // Function body parsing
     std::vector<std::unique_ptr<Statement>> body;
@@ -456,7 +507,9 @@ std::unique_ptr<Function> Parser::parseFunctionCall() {
         if (currentToken.is(Token::Kind::Comma)) {
             consume(Token::Kind::Comma, "Expected ',' between arguments.");
         } else if (!currentToken.is(Token::Kind::RightParen)) {
-            throw std::runtime_error("Expected ',' or ')' after argument.");
+           throw std::runtime_error("Expected ',' or ')' after argument.");
+
+
         }
     }
     consume(Token::Kind::RightParen, "Expected ')' after arguments.");

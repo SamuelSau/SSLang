@@ -9,8 +9,10 @@
 #include <string>
 #include <unordered_map>
 
-#include "lexer/Lexer.h"
-#include "ast/ASTNodes.h"
+//#include "lexer/Lexer.h"
+//#include "ast/ASTNodes.h"
+#include "../lexer/Lexer.h"
+#include "../ast/ASTNodes.h"
 
 class Parser {
 public:

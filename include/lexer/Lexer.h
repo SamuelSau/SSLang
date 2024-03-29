@@ -68,6 +68,4 @@ bool is_space(char c) noexcept;
 bool is_digit(char c) noexcept;
 bool is_identifier_char(char c) noexcept;
 
-std::ostream& operator<<(std::ostream& os, const Token::Kind& kind);
-
 #endif // LEXER_H
