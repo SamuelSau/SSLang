@@ -56,11 +56,50 @@ static void runTestForFile(const std::string& filePath) {
         StringDeclaration* stringDecl = new StringDeclaration("z", "Hello, World!");
         BoolDeclaration* boolDecl = new BoolDeclaration("b", "true");
 
+        // Create an example condition (e.g., x < 10)
+        BinaryExpression* condition = new BinaryExpression(
+            std::make_unique<PrimaryExpression>("x"), // Assuming you have a constructor that takes a string for the name
+            std::make_unique<PrimaryExpression>("10"),
+            "<" // Operation
+        );
+
+        // Create a simple body for the if statement (e.g., x = 20;)
+        AssignmentStatement* assignmentStmt = new AssignmentStatement(
+            "x",
+            std::make_unique<PrimaryExpression>("20")
+        );
+        std::vector<std::unique_ptr<Statement>> ifBody;
+        ifBody.push_back(std::unique_ptr<Statement>(assignmentStmt));
+
+        // Define a simple function that includes the IfStatement
+        std::vector<std::unique_ptr<Statement>> functionBody;
+
+        // Create and add the IfStatement to the function body as shown previously
+        // Assume condition and assignmentStmt are defined as before
+        functionBody.push_back(std::make_unique<IfStatement>(
+            std::unique_ptr<Expression>(condition),
+            std::make_unique<BlockStatement>(std::move(ifBody))
+        ));
+
+        // Define the function's parameters (empty for this example)
+        std::vector<ParamInfo> parameters;
+
+        // Create the function definition
+        FunctionDefinition* functionDef = new FunctionDefinition(
+            "testFunction", // Function name
+            parameters, // Parameters
+            "void", // Return type
+            std::move(functionBody) // Function body
+        );
+
         // Visit the declarations to test the LLVM IR generation
         llvmCodeGen.visit(intDecl);
         llvmCodeGen.visit(floatDecl);
         llvmCodeGen.visit(stringDecl);
         llvmCodeGen.visit(boolDecl);
+
+        // Visit the function definition to generate LLVM IR
+        llvmCodeGen.visit(functionDef);
 
         // Retrieve the LLVM module and dump the IR
         llvm::Module* module = llvmCodeGen.getModule();
@@ -76,6 +115,7 @@ static void runTestForFile(const std::string& filePath) {
         delete floatDecl;
         delete stringDecl;
         delete boolDecl;
+        delete functionDef;
         
         //// Output LLVM IR
         //llvm::raw_os_ostream ostream(std::cout);
