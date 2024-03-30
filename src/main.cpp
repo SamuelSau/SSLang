@@ -4,11 +4,13 @@
 #include <memory>
 #include <filesystem>
 #include <fstream>
+#include "llvm/IR/IRBuilder.h"
 
 #include "../include/lexer/Lexer.h"
 #include "../include/parser/Parser.h"
 #include "../include/symbolTable/SymbolTable.h"
 #include "../include/semanticAnalyzer/SemanticAnalyzer.h"
+#include "../include/llvmGen/LLVMCodeGen.h"
 
 static void runTestForFile(const std::string& filePath) {
     std::ifstream testFile(filePath);
@@ -23,7 +25,7 @@ static void runTestForFile(const std::string& filePath) {
 
     // Initialize the lexer and parser with the file content
     Lexer lexer(fileContent.c_str());
-    std::cout << "Lexer passed!" << std::endl;
+    std::cout << "Lexer passed???" << std::endl;
     Parser parser(lexer);
     std::filesystem::path testPath = filePath;
     std::string filename = testPath.filename().string();
@@ -42,6 +44,44 @@ static void runTestForFile(const std::string& filePath) {
         semanticAnalyzer.visit(program.get());
 
         std::cout << "Program is semantically correct!" << std::endl;
+
+        // Instantiate LLVMCodeGen and generate LLVM IR
+        LLVMCodeGen llvmCodeGen;
+
+        //program->accept(&llvmCodeGen); //when we are all done with implementation of LLVMCodeGen visitor functions
+        
+        // Create an declarations for global testing
+        IntDeclaration* intDecl = new IntDeclaration("x", "5");
+        FloatDeclaration* floatDecl = new FloatDeclaration("y", "5.0");
+        StringDeclaration* stringDecl = new StringDeclaration("z", "Hello, World!");
+        BoolDeclaration* boolDecl = new BoolDeclaration("b", "true");
+
+        // Visit the declarations to test the LLVM IR generation
+        llvmCodeGen.visit(intDecl);
+        llvmCodeGen.visit(floatDecl);
+        llvmCodeGen.visit(stringDecl);
+        llvmCodeGen.visit(boolDecl);
+
+        // Retrieve the LLVM module and dump the IR
+        llvm::Module* module = llvmCodeGen.getModule();
+        if (module) {
+            module->print(llvm::outs(), nullptr);
+        }
+        else {
+            std::cerr << "Module is null. No IR generated." << std::endl;
+        }
+
+        // Cleanup
+        delete intDecl;
+        delete floatDecl;
+        delete stringDecl;
+        delete boolDecl;
+        
+        //// Output LLVM IR
+        //llvm::raw_os_ostream ostream(std::cout);
+        //llvmCodeGen.getModule()->print(ostream, nullptr);
+
+        //std::cout << "\033[32mLLVM IR generation successful\033[0m" << std::endl;
 
         // If the parsing succeeds, it means the entire program (file content) is valid.
         std::cout << "\033[32mTest Passed\033[0m" << " in " << filename << std::endl;

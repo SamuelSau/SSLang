@@ -28,6 +28,15 @@ include(AddLLVM)
 # Plugins have to be explicitly enabled for Windows.
 set(LLVM_ENABLE_PLUGINS ON)
 
+# Disable RTTI if LLVM was build without it.
+if (NOT LLVM_ENABLE_RTTI)
+  if (MSVC)
+    string(APPEND CMAKE_CXX_FLAGS " /GR-")
+  else()
+    string(APPEND CMAKE_CXX_FLAGS " -fno-rtti")
+  endif()
+endif()
+
 # Include Directories
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
@@ -46,7 +55,7 @@ endif()
 llvm_map_components_to_libnames(llvmLibs Core Passes Support)
 
 # Main Executable
-add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)
+add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp src/llvmGen/LLVMCodeGen.cpp src/llvmGen/LLVMUtility.cpp)
 
 # Test Executables
 add_executable(SSLangDeclareTests tests/declaration_testing/declaration_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)
@@ -62,9 +71,6 @@ if(MSVC)
     target_compile_options(SSLangStatementTests PRIVATE /EHsc)
     target_compile_options(SSLangFunctionTests PRIVATE /EHsc)
     target_compile_options(SSLangProgramTests PRIVATE /EHsc)
-
-
-
 else()
     target_compile_options(SSLang PRIVATE -fexceptions)
     target_compile_options(SSLangDeclareTests PRIVATE -fexceptions)
@@ -75,8 +81,6 @@ else()
 endif()
 
 target_link_libraries(SSLang PRIVATE ${llvmLibs})
-
-
 
 # Custom target for running tests
 

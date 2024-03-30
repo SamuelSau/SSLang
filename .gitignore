@@ -46,6 +46,8 @@ Makefile
 # Ninja build files
 build.ninja
 compile_commands.json
+.ninja_deps
+.ninja_log
 
 # IDEs and editors
 .vs/
