@@ -64,8 +64,16 @@ Token Lexer::next() noexcept {
     case '}':
       return atom(Token::Kind::RightCurly);
     case '<':
+        if(std::next(m_beg) != '\0' && *std::next(m_beg) == '=') {
+            m_beg += 2; // 
+            return Token(Token::Kind::LessThanEqual, token_start, m_beg);
+        }
       return atom(Token::Kind::LessThan);
     case '>':
+        if (std::next(m_beg) != '\0' && *std::next(m_beg) == '=') {
+            m_beg += 2; // 
+            return Token(Token::Kind::GreaterThanEqual, token_start, m_beg);
+        }
       return atom(Token::Kind::GreaterThan);
     case '=':
       return atom(Token::Kind::Equal);
@@ -73,9 +81,9 @@ Token Lexer::next() noexcept {
       return atom(Token::Kind::Plus);
     case '-':
        if (std::next(m_beg) != '\0' && *std::next(m_beg) == '>') {
-                m_beg += 2; // 
-                return Token(Token::Kind::Arrow, token_start, m_beg);
-          }
+        m_beg += 2; // 
+        return Token(Token::Kind::Arrow, token_start, m_beg);
+       }
       return atom(Token::Kind::Minus);
     case '*':
       return atom(Token::Kind::Asterisk);

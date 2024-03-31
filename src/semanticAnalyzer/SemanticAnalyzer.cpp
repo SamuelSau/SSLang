@@ -55,66 +55,12 @@ void SemanticAnalyzer::visit(const AssignmentExpression* expr) {
     }
 }
 
-void SemanticAnalyzer::visit(const LogicOrExpression* expr) {
-    auto leftType = expr->left->getType(symbolTable);
-    auto rightType = expr->right->getType(symbolTable);
-
-    if (leftType != "bool" || rightType != "bool") {
-       throw std::runtime_error("Logical OR operations are only supported on booleans.");
-    }
-}
-
-void SemanticAnalyzer::visit(const LogicAndExpression* expr) {
-    auto leftType = expr->left->getType(symbolTable);
-    auto rightType = expr->right->getType(symbolTable);
-
-    if (leftType != "bool" || rightType != "bool") {
-       throw std::runtime_error("Logical AND operations only supports booleans.");
-    }
-}
-
-void SemanticAnalyzer::visit(const EqualityExpression* expr) {
-    auto leftType = expr->left->getType(symbolTable);
-    auto rightType = expr->right->getType(symbolTable);
-
-    if (leftType != rightType) {
-       throw std::runtime_error("Equality operations only supports expressions same type.");
-    }
-}
-
-void SemanticAnalyzer::visit(const ComparisonExpression* expr) {
-    auto leftType = expr->left->getType(symbolTable);
-    auto rightType = expr->right->getType(symbolTable);
-
-    if ((leftType == rightType) && (leftType == "bool")) {
-        std::cout << "The comparison operation is valid\n";
-    } 
-    else {
-       throw std::runtime_error("Comparison operations only support expressions of int or float types, and both sides must be of the same type.");
-    }
-}
-
-void SemanticAnalyzer::visit(const TermExpression* expr) {
-    auto leftType = expr->left->getType(symbolTable);
-    auto rightType = expr->right->getType(symbolTable);
-
-    if ((leftType != "int" || rightType != "int") || (leftType != "float" || rightType != "float")) {
-       throw std::runtime_error("Term expressions only supports on integers and floats.");
-    }
-}
-
-void SemanticAnalyzer::visit(const FactorExpression* expr) {
-    auto leftType = expr->left->getType(symbolTable);
-    auto rightType = expr->right->getType(symbolTable);
-
-    if ((leftType != "int" || rightType != "int") || (leftType != "float" || rightType != "float")) {
-       throw std::runtime_error("Factor expressions only supports on integers and floats.");
-    }
-}
-
  void SemanticAnalyzer::visit(const BinaryExpression* expr) {
     auto leftType = expr->left->getType(symbolTable);
     auto rightType = expr->right->getType(symbolTable);
+
+    std::cout << "We are visiting the binary expression\n";
+    std::cout << "Binary expressions: Left type: " << leftType << " Right type: " << rightType << "\n";
 
     if ((leftType != "int" || rightType != "int") || (leftType != "float" || rightType != "float")) {
        throw std::runtime_error("Binary expressions only supports on integers and floats.");

@@ -38,12 +38,6 @@ public:
     virtual void visit(const BoolDeclaration* decl) = 0;
 
     virtual void visit(const AssignmentExpression* expr) = 0;
-    virtual void visit(const LogicOrExpression* expr) = 0;
-    virtual void visit(const LogicAndExpression* expr) = 0;
-    virtual void visit(const EqualityExpression* expr) = 0;
-    virtual void visit(const ComparisonExpression* expr) = 0;
-    virtual void visit(const TermExpression* expr) = 0;
-    virtual void visit(const FactorExpression* expr) = 0;
     virtual void visit(const PrimaryExpression* expr) = 0;
     virtual void visit(const BinaryExpression* expr) = 0;   
     virtual void visit(const UnaryExpression* expr) = 0;

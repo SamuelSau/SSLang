@@ -36,14 +36,8 @@ public:
     void visit(const ExpressionStatement* stmt) override;
     void visit(const BinaryExpression* expr) override;
     void visit(const UnaryExpression* expr) override;
-    void visit(const LogicAndExpression* expr) override;
-    void visit(const LogicOrExpression* expr) override;
-    void visit(const EqualityExpression* expr) override;
-    void visit(const TermExpression* expr) override;
-    void visit(const FactorExpression* expr) override;
     void visit(const PrimaryExpression* expr) override;
     void visit(const AssignmentExpression* expr) override;
-    void visit(const ComparisonExpression* expr) override;
     void visit(const FunctionDefinition* expr) override;
     void visit(const FunctionCall* call) override;
 

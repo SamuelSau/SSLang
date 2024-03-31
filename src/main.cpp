@@ -34,8 +34,7 @@ static void runTestForFile(const std::string& filePath) {
     {
         auto program = parser.parseProgram();
 
-        //std::cout << "Parsed program as this: " << program->toString() << std::endl;
-        std::cout << "Parsed program successfully!" << std::endl;
+        std::cout << "Parsed program as this: " << program->toString() << std::endl;
 
         SymbolTable symbolTable;
 
@@ -50,24 +49,24 @@ static void runTestForFile(const std::string& filePath) {
 
         //program->accept(&llvmCodeGen); //when we are all done with implementation of LLVMCodeGen visitor functions
         
+        std::cout << "Creating declarations...\n";
+
         // Create an declarations for global testing
         IntDeclaration* intDecl = new IntDeclaration("x", "5");
         FloatDeclaration* floatDecl = new FloatDeclaration("y", "5.0");
         StringDeclaration* stringDecl = new StringDeclaration("z", "Hello, World!");
         BoolDeclaration* boolDecl = new BoolDeclaration("b", "true");
 
+        std::cout << "Creating condition from binary expression...\n";
+
         // Create an example condition (e.g., x < 10)
-        BinaryExpression* condition = new BinaryExpression(
-            std::make_unique<PrimaryExpression>("x"), // Assuming you have a constructor that takes a string for the name
-            std::make_unique<PrimaryExpression>("10"),
-            "<" // Operation
-        );
+        BinaryExpression* condition = new BinaryExpression(std::make_unique<PrimaryExpression>("5"), std::make_unique<PrimaryExpression>("10"), "<");
+
+        std::cout << "Creating AssignmentStatement...\n";
 
         // Create a simple body for the if statement (e.g., x = 20;)
-        AssignmentStatement* assignmentStmt = new AssignmentStatement(
-            "x",
-            std::make_unique<PrimaryExpression>("20")
-        );
+        AssignmentStatement* assignmentStmt = new AssignmentStatement("x", std::make_unique<PrimaryExpression>("20"));
+        
         std::vector<std::unique_ptr<Statement>> ifBody;
         ifBody.push_back(std::unique_ptr<Statement>(assignmentStmt));
 
@@ -76,9 +75,18 @@ static void runTestForFile(const std::string& filePath) {
 
         // Create and add the IfStatement to the function body as shown previously
         // Assume condition and assignmentStmt are defined as before
+
+        std::cout << "Creating IfStatement...\n";
         functionBody.push_back(std::make_unique<IfStatement>(
             std::unique_ptr<Expression>(condition),
             std::make_unique<BlockStatement>(std::move(ifBody))
+        ));
+
+        std::cout << "Creating ReturnStatement...\n";  
+
+        // Add a ReturnStatement to the function body
+        functionBody.push_back(std::make_unique<ReturnStatement>(
+            std::make_unique<PrimaryExpression>("5") // Return an integer value directly
         ));
 
         // Define the function's parameters (empty for this example)
@@ -88,7 +96,7 @@ static void runTestForFile(const std::string& filePath) {
         FunctionDefinition* functionDef = new FunctionDefinition(
             "testFunction", // Function name
             parameters, // Parameters
-            "void", // Return type
+            "int", // Return type
             std::move(functionBody) // Function body
         );
 
@@ -115,8 +123,10 @@ static void runTestForFile(const std::string& filePath) {
         delete floatDecl;
         delete stringDecl;
         delete boolDecl;
+        delete condition;
+        delete assignmentStmt;
         delete functionDef;
-        
+
         //// Output LLVM IR
         //llvm::raw_os_ostream ostream(std::cout);
         //llvmCodeGen.getModule()->print(ostream, nullptr);
@@ -136,7 +146,7 @@ int main() {
     // Adjusted for testing entire files rather than line-by-line
 
     std::vector<std::string> testFiles = {
-        "../../tests/program_testing/test_programs.ssl"
+        "tests/program_testing/test_programs.ssl"
     };
 
     for (const auto& filePath : testFiles) {

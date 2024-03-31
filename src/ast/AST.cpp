@@ -122,7 +122,7 @@ std::unique_ptr<Expression> Parser::parseAssignment() {
 
         if (currentToken.is(Token::Kind::Equal)) {
             consume(Token::Kind::Equal, "Expected an = after identifier"); // Consume the '=' operator
-            if (currentToken.is(Token::Kind::LeftParen)){
+            if (currentToken.is(Token::Kind::LeftParen)) {
                 consume(Token::Kind::LeftParen, "Expected '(' after parsing assignment.");
             }
             auto right = parseExpression(); // Recursively parse the right-hand side expression
@@ -130,8 +130,9 @@ std::unique_ptr<Expression> Parser::parseAssignment() {
 
             // Create an AssignmentExpression with the variable name and the expression
             return std::make_unique<AssignmentExpression>(std::move(variableName), std::move(right));
-        } else {
-           throw std::runtime_error("Expected '=' in assignment");
+        }
+        else {
+            throw std::runtime_error("Expected '=' in assignment");
 
 
         }
@@ -141,77 +142,8 @@ std::unique_ptr<Expression> Parser::parseAssignment() {
     }
     // If the left side isn't an identifier, handle according to your language's syntax rules
     // This might be an error, or you might have other forms of expressions that are valid here
-   throw std::runtime_error("Expected an identifier in assignment");
-
-
+    throw std::runtime_error("Expected an identifier in assignment");
 }
-
-std::unique_ptr<Expression> Parser::parseLogicOr() {
-    auto left = parseLogicAnd(); // Start with higher precedence expressions
-    while (currentToken.is(Token::Kind::Or)) {
-        std::string op = std::string(currentToken.lexeme());
-        consume(Token::Kind::Or, "Expected 'or'");
-        auto right = parseLogicAnd(); // Parse the right operand
-        left = std::make_unique<LogicOrExpression>(std::move(left), std::move(right));
-    }
-    return left;
-}
-
-std::unique_ptr<Expression> Parser::parseLogicAnd() {
-    auto left = parseEquality(); // Proceed to the next precedence level
-    while (currentToken.is(Token::Kind::And)) {
-        std::string op = std::string(currentToken.lexeme());
-        consume(Token::Kind::And, "Expected 'and'");
-        auto right = parseEquality(); // Parse the right operand
-        left = std::make_unique<LogicAndExpression>(std::move(left), std::move(right));
-    }
-    return left;
-}
-
-std::unique_ptr<Expression> Parser::parseEquality() {
-    auto left = parseComparison(); // Proceed to the next precedence level
-    while (currentToken.is(Token::Kind::Equals)) {
-        std::string op = std::string(currentToken.lexeme());
-        consume(Token::Kind::Equals, "Expected 'equals'");
-        auto right = parseComparison(); // Parse the right operand
-        left = std::make_unique<EqualityExpression>(std::move(left), std::move(right), op);
-    }
-    return left;
-}
-
-std::unique_ptr<Expression> Parser::parseComparison() {
-    auto left = parseTerm(); // This assumes parseTerm handles addition/subtraction
-    while (currentToken.is_one_of(Token::Kind::GreaterThan, Token::Kind::LessThan, Token::Kind::NotEquals, Token::Kind::Equals)) {
-        std::string op = std::string(currentToken.lexeme());
-        consume(currentToken.kind(), "Expected comparison operator");
-        auto right = parseTerm(); // Parse the right operand
-        left = std::make_unique<ComparisonExpression>(std::move(left), std::move(right), op);
-    }
-    return left;
-}
-
-std::unique_ptr<Expression> Parser::parseTerm() {
-    auto expr = parseFactor();
-    while (currentToken.is(Token::Kind::Plus) || currentToken.is(Token::Kind::Minus)) {
-        std::string op(1, currentToken.lexeme()[0]);
-        consume(currentToken.kind(), "Expected '+' or '-'");
-        auto right = parseFactor();
-        expr = std::make_unique<TermExpression>(std::move(expr), std::move(right), op);
-    }
-    return expr;
-}
-
-std::unique_ptr<Expression> Parser::parseFactor() {
-    auto expr = parseUnary();
-    while (currentToken.is(Token::Kind::Asterisk) || currentToken.is(Token::Kind::Slash)) {
-        std::string op(1, currentToken.lexeme()[0]);
-        consume(currentToken.kind(), "Expected '*' or '/'");
-        auto right = parseUnary();
-        expr = std::make_unique<FactorExpression>(std::move(expr), std::move(right), op);
-    }
-    return expr;
-}
-
 std::unique_ptr<Expression> Parser::parseUnary() {
     if (currentToken.is(Token::Kind::Minus)) {
         consume(Token::Kind::Minus, "Expected '-'");
@@ -234,13 +166,10 @@ std::unique_ptr<Expression> Parser::parseBinary() {
     auto left = parseUnary(); // Start with the highest precedence expressions
 
         // Check if a binary operation follows
-    if (currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash)) {
+    if (currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash, Token::Kind::GreaterThan, Token::Kind::LessThan, Token::Kind::GreaterThanEqual, Token::Kind::LessThanEqual, Token::Kind::NotEquals, Token::Kind::Equals, Token::Kind::And, Token::Kind::Or)) {
         std::string op = std::string(currentToken.lexeme());
         consume(currentToken.kind(), "Expected an operator");
         auto right = parseUnary(); // Assume only one binary operation is allowed
-        if (currentToken.is(Token::Kind::RightParen)){
-            consume(Token::Kind::RightParen, "Expected ')' after parsing binary.");
-        }
         return std::make_unique<BinaryExpression>(std::move(left), std::move(right), op);
     }
 
@@ -415,14 +344,10 @@ std::unique_ptr<Statement> Parser::parseReturnStatement() {
 std::unique_ptr<Statement> Parser::parseIfStatement() {
     if (!currentToken.is(Token::Kind::If)){
        throw std::runtime_error("Expected 'if' keyword.");
-
-
     }
     consume(Token::Kind::If, "Expected 'if' keyword.");
     if (!currentToken.is(Token::Kind::LeftParen)){
        throw std::runtime_error("Expected '(' after 'if' keyword.");
-
-
     }
     consume(Token::Kind::LeftParen, "Expected '(' after 'if' keyword.");
     auto condition = parseExpression();

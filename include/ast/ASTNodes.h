@@ -6,13 +6,13 @@
 #include <memory>
 #include <regex>
 #include <sstream>
+#include <set>
+
 
 //#include "symbolTable/SymbolTable.h"
 //#include "visitor/Visitor.h"
 #include "../symbolTable/SymbolTable.h"
 #include "../visitor/Visitor.h"
-
-
 
 class IVisitor;
 
@@ -167,205 +167,6 @@ class AssignmentExpression : public Expression {
 };
 
 
-class LogicOrExpression : public Expression {
-    public:
-        std::unique_ptr<Expression> left;
-        std::unique_ptr<Expression> right;
-
-        LogicOrExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right)
-            : left(std::move(left)), right(std::move(right)) {}
-
-        std::string toString() const override {
-            return "loE(" + left->toString() + " " + right->toString() + ")";
-        }
-
-        std::string getType(SymbolTable& symbolTable) const override {
-            auto leftType = left->getType(symbolTable);
-            auto rightType = right->getType(symbolTable);
-
-            // Simplified example: assume all operators work with integers only
-            if (leftType == "bool" && rightType == "bool") {
-                return "int";
-            }
-            else {
-                throw std::runtime_error("Type mismatch in logical or expression. Only support boolean types.");
-
-            }
-        }
-
-        void accept(IVisitor* visitor) const override {
-            visitor->visit(this);
-        }
-};
-
-class LogicAndExpression : public Expression {
-    public:
-        std::unique_ptr<Expression> left;
-        std::unique_ptr<Expression> right;
-
-        LogicAndExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right)
-            : left(std::move(left)), right(std::move(right)) {}
-
-        std::string toString() const override {
-            return "laE(" + left->toString() + " " + right->toString() + ")";
-        }
-
-        std::string getType(SymbolTable& symbolTable) const override {
-            auto leftType = left->getType(symbolTable);
-            auto rightType = right->getType(symbolTable);
-
-            // Simplified example: assume all operators work with integers only
-            if (leftType == "bool" && rightType == "bool") {
-                return "int";
-            }
-            else {
-                throw std::runtime_error("Type mismatch in logical and expression. Only support boolean types.");
-
-                
-            }
-        }
-
-        void accept(IVisitor* visitor) const override {
-            visitor->visit(this);
-        }
-};
-
-class EqualityExpression : public Expression {
-    public:
-        std::unique_ptr<Expression> left;
-        std::unique_ptr<Expression> right;
-        std::string op;
-
-        EqualityExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
-            : left(std::move(left)), right(std::move(right)), op(op) {}
-
-        std::string toString() const override {
-            return "eE(" + left->toString() + " " + op + " " + right->toString() + ")";
-        }
-
-        std::string getType(SymbolTable& symbolTable) const override {
-            auto leftType = left->getType(symbolTable);
-            auto rightType = right->getType(symbolTable);
-
-            // Simplified example: assume all operators work with integers only
-            if ((leftType == "int" && rightType == "int") || (leftType == "float" && rightType == "float")) {
-                return "bool";
-            }            
-            else {
-                throw std::runtime_error("Type mismatch in equality expression. Only support int and float types.");
-
-
-            }
-        }
-
-        void accept(IVisitor* visitor) const override {
-            visitor->visit(this);
-        }
-};
-
-class ComparisonExpression : public Expression {
-    public:
-        std::unique_ptr<Expression> left;
-        std::unique_ptr<Expression> right;
-        std::string op;
-
-        ComparisonExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
-            : left(std::move(left)), right(std::move(right)), op(op) {}
-
-        std::string toString() const override {
-            return "cE(" + left->toString() + " " + op + " " + right->toString() + ")";
-        }
-
-        std::string getType(SymbolTable& symbolTable) const override {
-            auto leftType = left->getType(symbolTable);
-            auto rightType = right->getType(symbolTable);
-
-            // Simplified example: assume all operators work with integers only
-            if ((leftType == "int" && rightType == "int") || (leftType == "float" && rightType == "float")) {
-                return "bool"; // Comparison expressions result in a boolean
-            } 
-            else {
-                throw std::runtime_error("Type mismatch in comparison expression. Both operands must be of the same type and either int or float.");
-                
-
-            }
-        }
-
-        void accept(IVisitor* visitor) const override {
-            visitor->visit(this);
-        }
-};
-
-class TermExpression : public Expression {
-    public:
-        std::unique_ptr<Expression> left;
-        std::unique_ptr<Expression> right;
-        std::string op;
-
-        TermExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
-            : left(std::move(left)), right(std::move(right)), op(op) {}
-
-        std::string toString() const override {
-            return "tE(" + left->toString() + " " + op + " " + right->toString() + ")";
-        }
-
-        std::string getType(SymbolTable& symbolTable) const override {
-            auto leftType = left->getType(symbolTable);
-            auto rightType = right->getType(symbolTable);
-
-            // Simplified example: assume all operators work with integers only
-            if (leftType == "int" && rightType == "int") {
-                return "int";
-            }
-            else if (leftType == "float" && rightType == "float") {
-                return "float";
-            }
-            else {
-               throw std::runtime_error("Type mismatch in term expression. Only support int and float types.");
-
-            }
-        }
-
-        void accept(IVisitor* visitor) const override {
-            visitor->visit(this);
-        }
-};
-
-class FactorExpression : public Expression {
-    public:
-        std::unique_ptr<Expression> left;
-        std::unique_ptr<Expression> right;
-        std::string op;
-
-        FactorExpression(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, std::string op)
-            : left(std::move(left)), right(std::move(right)), op(op) {}
-
-        std::string toString() const override {
-            return "fE(" + left->toString() + " " + op + " " + right->toString() + ")";
-        }
-
-        std::string getType(SymbolTable& symbolTable) const override {
-            auto leftType = left->getType(symbolTable);
-            auto rightType = right->getType(symbolTable);
-
-            // Simplified example: assume all operators work with integers only
-            if (leftType == "int" && rightType == "int") {
-                return "int";
-            }
-            else if (leftType == "float" && rightType == "float") {
-                return "float";
-            }
-            else {
-               throw std::runtime_error("Type mismatch in factor expression. Only support int and float types.");
-
-            }
-        }
-
-        void accept(IVisitor* visitor) const override {
-            visitor->visit(this);
-        }
-};
-
 class PrimaryExpression : public Expression {
     public:
         std::string name;
@@ -430,16 +231,32 @@ class BinaryExpression : public Expression {
             auto leftType = left->getType(symbolTable);
             auto rightType = right->getType(symbolTable);
 
-            // Simplified example: assume all operators work with integers only
-            if (leftType == "int" && rightType == "int") {
-                return "int";
+            std::cout << "Binary Expression: Left type: " << leftType << " Right type: " << rightType << "\n"; // Print the types of the left and right operands
+
+            // List of operations that should return a boolean type
+            std::set<std::string> comparisonOps = { "<", ">", "<=", ">=", "equals", "notEquals" };
+            std::set<std::string> logicalOps = { "and", "or" };
+
+            // Check if the operation is a comparison or logical operation
+            if (comparisonOps.find(op) != comparisonOps.end() || logicalOps.find(op) != logicalOps.end()) {
+                // For simplicity, assuming left and right operands are of compatible types for these operations
+                std::cout << "We are in the comparison or logical operation\n";
+                return "bool";
             }
-            else if (leftType == "float" && rightType == "float") {
-                return "float";
+            else if (op == "+" || op == "-" || op == "*" || op == "/") {
+                // Arithmetic operations: return the type based on the operands
+                if (leftType == "int" && rightType == "int") {
+                    return "int";
+                }
+                else if (leftType == "float" && rightType == "float") {
+                    return "float";
+                }
+                else {
+                    throw std::runtime_error("Type mismatch in arithmetic binary expression. Unsupported operand types.");
+                }
             }
             else {
-
-               throw std::runtime_error("Type mismatch in binary expression. Only support int and float types.");
+                throw std::runtime_error("Unsupported binary operation: " + op);
             }
         }
 
@@ -461,9 +278,8 @@ class UnaryExpression : public Expression {
         }
 
         std::string getType(SymbolTable& symbolTable) const override {
-        std::string exprType = expr->getType(symbolTable);
-
-        return exprType;
+            std::string exprType = expr->getType(symbolTable);
+            return exprType;
         }
 
         void accept(IVisitor* visitor) const override {

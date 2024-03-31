@@ -14,7 +14,7 @@ public:
         DoubleQuote, Comment, Pipe, End, Unexpected, Function, If, Else, Range,
         Return, Loop, Int, Float, String, Bool, Arrow, StringLiteral,
         FloatLiteral, Log, Not, Equals, NotEquals, Or, And, Uninitialized,
-        For, While, Print, Call, True, False
+        For, While, Print, Call, True, False, LessThanEqual, GreaterThanEqual
     };
 
     Token() noexcept : m_kind{Kind::End}, m_lexeme{""} {} //default constructor

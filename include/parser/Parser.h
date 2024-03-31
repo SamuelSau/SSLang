@@ -37,14 +37,8 @@ public:
     // Expression parsing
     std::unique_ptr<Expression> parseExpression(); 
     std::unique_ptr<Expression> parseAssignment(); //x = 5; (where x is already declared)
-    std::unique_ptr<Expression> parseLogicOr(); //x or y;
-    std::unique_ptr<Expression> parseLogicAnd(); //x and y;
-    std::unique_ptr<Expression> parseEquality(); //x equals 5;
-    std::unique_ptr<Expression> parseComparison(); //x > 5;
-    std::unique_ptr<Expression> parseTerm(); //x + 5;
-    std::unique_ptr<Expression> parseFactor(); //x * 5;
-    std::unique_ptr<Expression> parseUnary(); //-x, not x;
     std::unique_ptr<Expression> parseBinary(); // x + y;
+    std::unique_ptr<Expression> parseUnary(); //-x, not x;
     std::unique_ptr<Expression> parsePrimary(); //x;
 
     //Statement parsing
