@@ -209,7 +209,7 @@ SymbolTable symbolTable;
 
 	 // Create blocks for the then, else (optional), and merge parts of the if statement
 	 llvm::BasicBlock* thenBB = llvm::BasicBlock::Create(context, "then", function);
-	 llvm::BasicBlock* elseBB = llvm::BasicBlock::Create(context, "else");
+	 llvm::BasicBlock* elseBB = llvm::BasicBlock::Create(context, "else", function);
 	 llvm::BasicBlock* mergeBB = llvm::BasicBlock::Create(context, "ifcont", function);
 
 	 // Assuming 'condition' is an Expression that can be evaluated to a value
@@ -245,7 +245,30 @@ SymbolTable symbolTable;
  }
 
  void LLVMCodeGen::visit(const AssignmentStatement* stmt) {
-	 //Generate LLVM IR for an assignment statement.
+	 llvm::Value* valueToAssign = evaluateExpression(stmt->expression.get());
+	 if (!valueToAssign) {
+		 std::cerr << "Error evaluating expression for assignment to " << stmt->name << std::endl;
+		 return;
+	 }
+
+	 // Check if the variable is a local variable in the current function scope
+	 auto localIt = currentLocals.find(stmt->name);
+	 if (localIt != currentLocals.end()) {
+		 // It's a local variable, generate a store instruction to update its value
+		 builder.CreateStore(valueToAssign, localIt->second);
+	 }
+	 else {
+		 // If not found in local, check global variables
+		 auto globalIt = globals.find(stmt->name);
+		 if (globalIt != globals.end()) {
+			 // It's a global variable, generate a store instruction to update its value
+			 builder.CreateStore(valueToAssign, globalIt->second);
+		 }
+		 else {
+			 std::cerr << "Variable " << stmt->name << " not found for assignment." << std::endl;
+		 }
+	 }
+
  }
 
  void LLVMCodeGen::visit(const PrintStatement* stmt) {
@@ -253,7 +276,17 @@ SymbolTable symbolTable;
  }
 
  void LLVMCodeGen::visit(const BlockStatement* stmt) {
-	 //Generate LLVM IR for a block statement.
+	 std::cout << "Visiting block statement\n";
+	 // Save the current state of local variables for the current scope
+	 auto previousLocals = currentLocals;
+
+	 // Process each statement in the block
+	 for (const auto& statement : stmt->statements) {
+		 statement->accept(this);
+	 }
+
+	 // Restore the previous state of local variables, exiting the current scope
+	 currentLocals = previousLocals;
  }
 
  void LLVMCodeGen::visit(const ExpressionStatement* stmt) {
