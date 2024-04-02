@@ -11,15 +11,15 @@ str informalGreeting = "sup";
 function add(int: x, int: y) -> int {
 	if (x equals 2){
 		loop range(2,3){
-		  q = 0.7;	  
-		  }
+		 log(t);
+		}
 		ret(Q);
 	}
 	else {
-	    loop (x < 10){
-		  x = x + 1;
+		loop (x < 10){
+		   log(x);	
 		}
-		log(x);
 		ret(y);
 	}
 }
+call add(x,y);

@@ -4,9 +4,7 @@
 #include <string>
 #include <unordered_map>
 
-//#include "parser/Parser.h"
 #include "../../include/parser/Parser.h"
-
 
 bool Parser::atEnd() const {
     return currentToken.is(Token::Kind::End);
@@ -63,16 +61,16 @@ std::unique_ptr<Expression> Parser::parseExpression() {
     if (currentToken.is(Token::Kind::End)) {
         throw std::runtime_error("Unexpected end of file. Expected expression.");
     }
-    /*else if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String, Token::Kind::Bool)) {
+    else if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String, Token::Kind::Bool)) {
         throw std::runtime_error("Forbidden keyword for expressions! Should not be able to parse as expression! Please use \"int\", \"flt\", \"str\", \"bool\" for declarations.");
-    }*/
+    }
     else if (currentToken.is(Token::Kind::Return)) {
         throw std::runtime_error("Not allowed to return without it being in a function definition");
 
     }
-    /*else if (currentToken.is_one_of(Token::Kind::While, Token::Kind::For)) {
+    else if (currentToken.is_one_of(Token::Kind::While, Token::Kind::For)) {
         throw std::runtime_error("Forbidden keyword for expressions! Please use \"loop\" for while and for.");
-    }*/
+    }
     else if (currentToken.is_one_of(Token::Kind::Function, Token::Kind::Call)) {
         throw std::runtime_error("No function definitions or calls allowed in expressions. Only reserved for statements.");
     }

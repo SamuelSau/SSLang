@@ -17,6 +17,7 @@ public:
 
     llvm::Module* getModule() const;
     llvm::Value* evaluateExpression(Expression* expr);
+    void tryLoadAndDebug(llvm::Value* ptr, const PrimaryExpression* expr);
 
     // Visitor functions for different AST nodes
     void visit(const Program* program) override;

@@ -1,6 +1,3 @@
-//#include "ast/ASTNodes.h"
-//#include "parser/Parser.h"
-
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -8,7 +5,6 @@
 #include <iostream>
 #include "../../include/ast/ASTNodes.h"
 #include "../../include/parser/Parser.h"
-
 
 
 std::unique_ptr<Declaration> Parser::parseIntDeclaration() {

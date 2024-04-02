@@ -166,7 +166,6 @@ class AssignmentExpression : public Expression {
         }
 };
 
-
 class PrimaryExpression : public Expression {
     public:
         std::string name;
@@ -460,7 +459,7 @@ class FunctionDefinition : public Function {
         }
 };
 
-class FunctionCall : public Function { //we only accept statements for function calls like: call add(3,2);
+class FunctionCall : public Function {
     public:
         std::string name;
         std::vector<std::unique_ptr<Expression>> arguments;
@@ -471,8 +470,8 @@ class FunctionCall : public Function { //we only accept statements for function 
         std::string toString() const override {
             std::string args;
             for (const auto& arg : arguments) {
-                if (!args.empty()) args += ", "; // Add a comma separator between arguments, but not before the first one
-                    args += arg->toString(); // Call toString() on the pointed-to Expression
+                if (!args.empty()) args += ", "; 
+                    args += arg->toString(); 
                 }
             return "FunctionCall " + name + "(" + args + ")";
         }
