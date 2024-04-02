@@ -185,6 +185,7 @@ class PrimaryExpression : public Expression {
             static const std::regex stringRegex("^\".*\"$");
 
             if (std::regex_match(name, intRegex)) {
+                std::cout << "Primary expression is an int for : " << name << std::endl;
                 return "int";
             }
             // Check if the primary expression is a float
@@ -193,6 +194,7 @@ class PrimaryExpression : public Expression {
             }
             // Check if the primary expression is a string literal
             else if (std::regex_match(name, stringRegex)) {
+                std::cout << "Primary expression is a string for : " << name << std::endl;
                 return "string";
             }
             // Check if the primary expression is a boolean literal
@@ -205,7 +207,7 @@ class PrimaryExpression : public Expression {
                 if (!symbolInfo.has_value()) {
                    throw std::runtime_error("pE '" + name + "' not declared.");
                 }
-                //std::cout << "Symbol type in primary expression: " << symbolInfo->type << "\n"; // Print the type of the symbol
+                std::cout << "Symbol type in primary expression is " << symbolInfo->type << " for: " << name << std::endl; // Print the type of the symbol
                 return symbolInfo->type;
             }
         }
@@ -288,23 +290,6 @@ class UnaryExpression : public Expression {
 };
 
 //Statements
-class LoopStatement : public Statement {
-    public:
-        std::unique_ptr<Expression> start;
-        std::unique_ptr<Expression> end;   
-        std::unique_ptr<Statement> body;
-
-        LoopStatement(std::unique_ptr<Expression> start, std::unique_ptr<Expression> end, std::unique_ptr<Statement> body)
-            : start(std::move(start)), end(std::move(end)), body(std::move(body)) {}
-        
-        std::string toString() const override {
-            return "LoopStatement(" + start->toString() + " " + end->toString() + " " + body->toString() + ")";
-        }
-
-        void accept(IVisitor* visitor) const override {
-            visitor->visit(this);
-        }
-};
 
 class PrintStatement : public Statement {
     public:
@@ -374,27 +359,17 @@ class AssignmentStatement : public Statement {
 class IfStatement : public Statement {
     public:
         std::unique_ptr<Expression> condition;
-        std::unique_ptr<Statement> body;
-        IfStatement(std::unique_ptr<Expression> condition, std::unique_ptr<Statement> body)
-            : condition(std::move(condition)), body(std::move(body)) {}
+        std::unique_ptr<Statement> thenBody;
+        std::unique_ptr<Statement> elseBody;
         
-        std::string toString() const override {
-            return "IfStatement(" + condition->toString() + " " + body->toString() + ")";
-        }
+        IfStatement(std::unique_ptr<Expression> condition,
+            std::unique_ptr<Statement> thenBody,
+            std::unique_ptr<Statement> elseBody = nullptr) // elseBody is optional
+            : condition(std::move(condition)), thenBody(std::move(thenBody)), elseBody(std::move(elseBody)) {}
 
-        void accept(IVisitor* visitor) const override {
-            visitor->visit(this);
-        }
-};
-
-class ElseStatement : public Statement {
-    public:
-        std::unique_ptr<Statement> body;
-        ElseStatement(std::unique_ptr<Statement> body)
-            : body(std::move(body)) {}
-        
         std::string toString() const override {
-            return "ElseStatement(" + body->toString() + ")";
+            return "IfStatement(" + condition->toString() + " then: " + thenBody->toString() +
+                (elseBody ? " else: " + elseBody->toString() : "") + ")";
         }
 
         void accept(IVisitor* visitor) const override {
@@ -503,6 +478,7 @@ class FunctionCall : public Function { //we only accept statements for function 
         }
 
         void accept(IVisitor* visitor) const override {
+            std::cout << "Visiting function call in ASTNodes.h" << std::endl;
             visitor->visit(this);
         }
 };

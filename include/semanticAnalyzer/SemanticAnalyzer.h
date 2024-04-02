@@ -21,20 +21,12 @@ public:
     void visit(const PrimaryExpression* expr);
     void visit(const UnaryExpression* expr);
     void visit(const AssignmentExpression* expr);
-    void visit(const LogicOrExpression* expr);
-    void visit(const LogicAndExpression* expr);
-    void visit(const EqualityExpression* expr);
-    void visit(const ComparisonExpression* expr);
-    void visit(const TermExpression* expr);
-    void visit(const FactorExpression* expr);
 
-    void visit(const LoopStatement* stmt);
     void visit(const PrintStatement* stmt);
     void visit(const WhileLoopStatement* stmt);
     void visit(const ForLoopStatement* stmt);
     void visit(const AssignmentStatement* stmt);
     void visit(const IfStatement* stmt);
-    void visit(const ElseStatement* stmt);
     void visit(const ReturnStatement* stmt);
     void visit(const BlockStatement* stmt);
     void visit(const ExpressionStatement* stmt);
@@ -44,7 +36,6 @@ public:
 
     void visit(const Program* program);
     
-
 private:
     SymbolTable& symbolTable;
     std::string currentFunctionReturnType;

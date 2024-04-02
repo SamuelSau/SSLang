@@ -1,7 +1,3 @@
-
-//#include "semanticAnalyzer/SemanticAnalyzer.h"
-//#include "ast/ASTNodes.h"
-//#include "symbolTable/SymbolTable.h"
 #include "../../include/semanticAnalyzer/SemanticAnalyzer.h"
 #include "../../include/symbolTable/SymbolTable.h"
 #include "../../include/ast/ASTNodes.h"
@@ -11,12 +7,10 @@ SemanticAnalyzer::SemanticAnalyzer(SymbolTable& symbolTable) : symbolTable(symbo
 //Implementation of the visit methods
 
 void SemanticAnalyzer::visit(const IntDeclaration* decl) {
-    
     if (symbolTable.isDeclared(decl->name)) {
        throw std::runtime_error("int '" + decl->name + "' is already declared in this scope.");
     }
     symbolTable.addVariable(decl->name, "int");
-    //std::cout << "Variable " + decl->name + " being added." << std::endl;
     
 }
 
@@ -42,6 +36,9 @@ void SemanticAnalyzer::visit(const BoolDeclaration* decl) {
 }
 
 void SemanticAnalyzer::visit(const AssignmentExpression* expr) {
+    if (!insideFunction) {
+        throw std::runtime_error("Assignment expressions must be inside a function definition.");
+    }
     auto varInfo = symbolTable.getSymbolInfo(expr->name);
     
     if (!varInfo.has_value()) {
@@ -56,6 +53,9 @@ void SemanticAnalyzer::visit(const AssignmentExpression* expr) {
 }
 
  void SemanticAnalyzer::visit(const BinaryExpression* expr) {
+     if (!insideFunction) {
+         throw std::runtime_error("Binary expressions must be inside a function definition.");
+     }
     auto leftType = expr->left->getType(symbolTable);
     auto rightType = expr->right->getType(symbolTable);
 
@@ -77,6 +77,7 @@ void SemanticAnalyzer::visit(const PrimaryExpression* expr) {
 }
 
 void SemanticAnalyzer::visit(const UnaryExpression* expr) {
+
     auto exprType = expr->expr->getType(symbolTable);
     if (exprType != "int" || exprType != "float") {
        throw std::runtime_error("Unary operations only supports integers and floats.");
@@ -84,19 +85,15 @@ void SemanticAnalyzer::visit(const UnaryExpression* expr) {
 
 }
 
-void SemanticAnalyzer::visit(const LoopStatement* stmt) {
-    auto start = stmt->start->getType(symbolTable);
-    auto end = stmt->end->getType(symbolTable);
-    if (start != "int" && end != "int") {
-       throw std::runtime_error("Loop start and end values must be integers.");
-    }
-    
-    stmt->body->accept(this);
-
-}
 
 void SemanticAnalyzer::visit(const PrintStatement* stmt) {
+    if (!insideFunction) {
+        throw std::runtime_error("Print statement must be inside a function definition.");
+    }
     auto exprType = stmt->expr->getType(symbolTable);
+
+    std::cout << "We are visiting the print statement" << std::endl;
+    //std::cout << "Expression type: " << exprType << std::endl;
 
     if (exprType != "int" && exprType != "float" && exprType != "string") {
        throw std::runtime_error("Print statement only supports int, float, and string types.");
@@ -104,6 +101,9 @@ void SemanticAnalyzer::visit(const PrintStatement* stmt) {
 }
 
 void SemanticAnalyzer::visit(const WhileLoopStatement* stmt) {
+    if (!insideFunction) {
+       throw std::runtime_error("While loops must be inside a function definition.");
+    }
     symbolTable.enterScope();
     auto conditionType = stmt->condition->getType(symbolTable);
     if (conditionType != "bool") {
@@ -115,6 +115,9 @@ void SemanticAnalyzer::visit(const WhileLoopStatement* stmt) {
 }
 
 void SemanticAnalyzer::visit(const ForLoopStatement* stmt) {
+    if (!insideFunction) {
+        throw std::runtime_error("For loops must be inside a function definition.");
+    }
     symbolTable.enterScope();
     auto start = stmt->start->getType(symbolTable);
     auto end = stmt->end->getType(symbolTable);
@@ -127,6 +130,9 @@ void SemanticAnalyzer::visit(const ForLoopStatement* stmt) {
 }
 
 void SemanticAnalyzer::visit(const AssignmentStatement* stmt) {
+    if (!insideFunction) {
+        throw std::runtime_error("Assignment expressions must be inside a function definition.");
+    }
     std::cout << "We are visiting the assignment statement\n";
     auto varInfo = symbolTable.getSymbolInfo(stmt->name);
     if (!varInfo) {
@@ -139,24 +145,31 @@ void SemanticAnalyzer::visit(const AssignmentStatement* stmt) {
 }
 
 void SemanticAnalyzer::visit(const IfStatement* stmt) {
-    symbolTable.enterScope();
+    if (!insideFunction) {
+        throw std::runtime_error("If Statements must be inside a function definition");
+    }
+    // Check the condition's type
     auto conditionType = stmt->condition->getType(symbolTable);
     if (conditionType != "bool") {
-       throw std::runtime_error("If condition must be boolean");
+        throw std::runtime_error("If condition must be boolean");
     }
-    stmt->body->accept(this);
-    symbolTable.leaveScope();
-}
 
-void SemanticAnalyzer::visit(const ElseStatement* stmt) {
+    // Then body
     symbolTable.enterScope();
-    stmt->body->accept(this);
-    symbolTable.leaveScope();    
+    stmt->thenBody->accept(this);
+    symbolTable.leaveScope();
+
+    // Else body, if it exists
+    if (stmt->elseBody) {
+        symbolTable.enterScope();
+        stmt->elseBody->accept(this);
+        symbolTable.leaveScope();
+    }
 }
 
 void SemanticAnalyzer::visit(const ReturnStatement* stmt) {
     if (!insideFunction) {
-       throw std::runtime_error("Return statement used outside of function definition.");
+       throw std::runtime_error("Return statement must be inside a function definition.");
     }
     auto exprType = stmt->expression->getType(symbolTable);
 
@@ -169,6 +182,9 @@ void SemanticAnalyzer::visit(const ReturnStatement* stmt) {
 }
 
 void SemanticAnalyzer::visit(const BlockStatement* stmt) {
+    if (!insideFunction) {
+        throw std::runtime_error("Block statement must be inside a function definition.");
+    }
     symbolTable.enterScope();
     
     for (const auto& statement : stmt->statements) {
@@ -179,6 +195,9 @@ void SemanticAnalyzer::visit(const BlockStatement* stmt) {
 }
 
 void SemanticAnalyzer::visit(const ExpressionStatement* stmt) {
+    if (!insideFunction) {
+        throw std::runtime_error("Expression statements must be inside a function definition.");
+    }
      stmt->expression->accept(this);
 }
 
@@ -211,6 +230,7 @@ void SemanticAnalyzer::visit(const FunctionDefinition* funcDef) {
 }
 
 void SemanticAnalyzer::visit(const FunctionCall* call) {
+    std::cout << "Function call: <<" << call->name << ">>\n";
     auto funcInfo = symbolTable.getFunctionInfo(call->name);
     if (!funcInfo) {
        throw std::runtime_error("Function " + call->name + " not declared.");

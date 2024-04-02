@@ -25,11 +25,9 @@ public:
     void visit(const StringDeclaration* decl) override;
     void visit(const BoolDeclaration* decl) override;
     void visit(const ReturnStatement* stmt) override;
-    void visit(const LoopStatement* stmt) override;
     void visit(const ForLoopStatement* stmt) override;
     void visit(const WhileLoopStatement* stmt) override;
     void visit(const IfStatement* stmt) override;
-    void visit(const ElseStatement* stmt) override;
     void visit(const AssignmentStatement* stmt) override;
     void visit(const PrintStatement* stmt) override;
     void visit(const BlockStatement* stmt) override;

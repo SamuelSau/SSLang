@@ -180,17 +180,13 @@ std::unique_ptr<Expression> Parser::parseBinary() {
 std::unique_ptr<Expression> Parser::parsePrimary() {
     if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String)) {
        throw std::runtime_error("Forbidden keyword for expressions. Please use \"int\", \"flt\", or \"str\" for declarations.");
-
-
     }
     else if (currentToken.is_one_of(Token::Kind::While, Token::Kind::For)) {
        throw std::runtime_error("Forbidden keyword for expressions. Please use \"loop\" for while and for.");
 
-
     }
-    else if (currentToken.is(Token::Kind::Loop)){
+    if (currentToken.is(Token::Kind::Loop)){
        throw std::runtime_error("Loop keyword is not allowed in primary expressions.");
-
 
     }
     else if (currentToken.is(Token::Kind::Return)){
@@ -235,9 +231,8 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
     }
 
     else {
+        std::cout << "Token in primary expression: " << currentToken.lexeme() << "\n";
        throw std::runtime_error("Unexpected token in expression for parsing primary");
-
-
     }
 
     return std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
@@ -351,17 +346,20 @@ std::unique_ptr<Statement> Parser::parseIfStatement() {
     }
     consume(Token::Kind::LeftParen, "Expected '(' after 'if' keyword.");
     auto condition = parseExpression();
+
     consume(Token::Kind::RightParen, "Expected ')' after if condition.");
-    auto body = parseBlock();
-    return std::make_unique<IfStatement>(std::move(condition), std::move(body));
+    auto thenBody = parseBlock();
+
+    std::unique_ptr<Statement> elseBody = nullptr;
+
+    if (currentToken.is(Token::Kind::Else)) {
+        consume(Token::Kind::Else, "Expected 'else' keyword.");
+        elseBody = parseBlock(); 
+    }
+
+    return std::make_unique<IfStatement>(std::move(condition), std::move(thenBody), std::move(elseBody));
 }
 
-std::unique_ptr<Statement> Parser::parseElseStatement(){
-    consume(Token::Kind::Else, "Expected 'else' keyword.");
-    auto body = parseBlock();
-    return std::make_unique<ElseStatement>(std::move(body));
-
-}
 
 //Parsing functions
 std::unique_ptr<Function> Parser::parseFunctionDefinition() {

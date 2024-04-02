@@ -22,7 +22,6 @@ class WhileLoopStatement;
 class ForLoopStatement;
 class AssignmentStatement;
 class IfStatement;
-class ElseStatement;
 class ReturnStatement;
 class BlockStatement;
 class ExpressionStatement;
@@ -42,13 +41,11 @@ public:
     virtual void visit(const BinaryExpression* expr) = 0;   
     virtual void visit(const UnaryExpression* expr) = 0;
     
-    virtual void visit(const LoopStatement* stmt) = 0;
     virtual void visit(const PrintStatement* stmt) = 0;
     virtual void visit(const WhileLoopStatement* stmt) = 0;
     virtual void visit(const ForLoopStatement* stmt) = 0;
     virtual void visit(const AssignmentStatement* stmt) = 0;
     virtual void visit(const IfStatement* stmt) = 0;
-    virtual void visit(const ElseStatement* stmt) = 0;
     virtual void visit(const ReturnStatement* stmt) = 0;
     virtual void visit(const BlockStatement* stmt) = 0;
     virtual void visit(const ExpressionStatement* decl) = 0;

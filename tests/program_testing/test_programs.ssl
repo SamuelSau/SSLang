@@ -1,5 +1,4 @@
 flt q = 0.3;
-q = 7.0;
 bool isDeclared = false;
 int x = 2;
 int y = 3;
@@ -7,19 +6,20 @@ int p = 7;
 int Q = 9;
 int z = 0;
 int t = 2;
-log(x);
 str informalGreeting = "sup";
 
-function add(int: x, int: y) -> int { 
-    log(informalGreeting);
-    loop(x > y){
-        if (y equals 3) {
-            ret(t);
-        }
-        //if y doesnt equal to 3!
-         else {
-            ret(p);
-        }
-    }
+function add(int: x, int: y) -> int {
+	if (x equals 2){
+		loop range(2,3){
+		  q = 0.7;	  
+		  }
+		ret(Q);
+	}
+	else {
+	    loop (x < 10){
+		  x = x + 1;
+		}
+		log(x);
+		ret(y);
+	}
 }
-call add(x, y);

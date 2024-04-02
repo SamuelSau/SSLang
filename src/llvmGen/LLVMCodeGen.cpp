@@ -59,7 +59,6 @@ SymbolTable symbolTable;
 
 		 // Remember the variable for later use within the function
 		 currentLocals[decl->name] = alloca;
-
 	 }
 	 else {
 		 
@@ -191,17 +190,82 @@ SymbolTable symbolTable;
 	 builder.CreateRet(returnValue);
  }
 
- void LLVMCodeGen::visit(const LoopStatement* stmt) {
-	 //Generate LLVM IR for a loop statement.
- }
+
 
  void LLVMCodeGen::visit(const ForLoopStatement* stmt) {
-	 //Generate LLVM IR for a for loop statement.
+	 llvm::Function* function = builder.GetInsertBlock()->getParent();
+
+	 // Pre-loop setup. Assuming 'start' initializes the loop variable
+	 llvm::Value* startVal = evaluateExpression(stmt->start.get());
+	 llvm::AllocaInst* loopVar = llvm_util::createEntryBlockAlloca(function, "loopVar", startVal->getType());
+	 builder.CreateStore(startVal, loopVar);
+
+	 // Create BasicBlocks for the loop condition check, loop body, and loop end (to exit the loop)
+	 llvm::BasicBlock* condBB = llvm::BasicBlock::Create(context, "forCond", function);
+	 llvm::BasicBlock* bodyBB = llvm::BasicBlock::Create(context, "forBody", function);
+	 llvm::BasicBlock* endBB = llvm::BasicBlock::Create(context, "forEnd", function);
+
+	 // Branch to condition block to start loop execution
+	 builder.CreateBr(condBB);
+
+	 // Loop condition block
+	 builder.SetInsertPoint(condBB);
+	 llvm::Value* endVal = evaluateExpression(stmt->end.get());
+	 llvm::Value* loopVarValue = builder.CreateLoad(loopVar->getAllocatedType(), loopVar, "loopVar");
+	 // Assuming 'end' evaluates whether to continue the loop
+	 llvm::Value* condValue = builder.CreateICmpSLT(loopVarValue, endVal, "loopcond"); // Compare if loopVar < endVal
+	 builder.CreateCondBr(condValue, bodyBB, endBB);
+
+	 // Loop body
+	 builder.SetInsertPoint(bodyBB);
+	 stmt->body->accept(this); // Execute the loop body
+
+	 // Loop increment
+	 llvm::Value* stepVal = llvm::ConstantInt::get(context, llvm::APInt(32, 1)); // Assuming an increment by 1
+	 llvm::Value* nextVar = builder.CreateAdd(loopVarValue, stepVal, "nextVar");
+	 builder.CreateStore(nextVar, loopVar);
+
+	 // After body, jump back to check condition again
+	 builder.CreateBr(condBB);
+
+	 // Continue with the rest of the code after the loop
+	 builder.SetInsertPoint(endBB);
  }
 
+
  void LLVMCodeGen::visit(const WhileLoopStatement* stmt) {
-	 //Generate LLVM IR for a while loop statement.
+	 llvm::Function* function = builder.GetInsertBlock()->getParent();
+
+	 // Create BasicBlocks for condition check, loop body, and exit
+	 llvm::BasicBlock* conditionBB = llvm::BasicBlock::Create(context, "whileCond", function);
+	 llvm::BasicBlock* loopBodyBB = llvm::BasicBlock::Create(context, "whileBody", function);
+	 llvm::BasicBlock* loopExitBB = llvm::BasicBlock::Create(context, "whileExit", function);
+
+	 // Branch to the condition block to begin the loop
+	 builder.CreateBr(conditionBB);
+
+	 // Populate conditionBB
+	 builder.SetInsertPoint(conditionBB);
+	 llvm::Value* condValue = evaluateExpression(stmt->condition.get());
+
+	 // Ensure condValue is a boolean i1 for LLVM's conditional branch instruction
+	 if (!condValue->getType()->isIntegerTy(1)) {
+		 // This is a simplified example; you'll need actual logic to handle this
+		 throw std::logic_error("Condition expression must evaluate to a boolean (i1) type");
+	 }
+
+	 builder.CreateCondBr(condValue, loopBodyBB, loopExitBB);
+
+	 // Populate loopBodyBB
+	 builder.SetInsertPoint(loopBodyBB);
+	 stmt->body->accept(this);
+	 // Jump back to conditionBB to re-evaluate the condition
+	 builder.CreateBr(conditionBB);
+
+	 // Continue with the rest of the code after the loop
+	 builder.SetInsertPoint(loopExitBB);
  }
+
 
  void LLVMCodeGen::visit(const IfStatement* stmt) {
 	 auto& context = builder.getContext();
@@ -209,39 +273,26 @@ SymbolTable symbolTable;
 
 	 // Create blocks for the then, else (optional), and merge parts of the if statement
 	 llvm::BasicBlock* thenBB = llvm::BasicBlock::Create(context, "then", function);
-	 llvm::BasicBlock* elseBB = llvm::BasicBlock::Create(context, "else", function);
-	 llvm::BasicBlock* mergeBB = llvm::BasicBlock::Create(context, "ifcont", function);
+	 llvm::BasicBlock* elseBB = stmt->elseBody ? llvm::BasicBlock::Create(context, "else", function) : nullptr;
 
 	 // Assuming 'condition' is an Expression that can be evaluated to a value
 	 llvm::Value* condValue = evaluateExpression(stmt->condition.get());; // Evaluate the condition expression
      
-	 // Create a conditional branch on the condition value
-     builder.CreateCondBr(condValue, thenBB, elseBB);
+	 if (elseBB) {
+		 builder.CreateCondBr(condValue, thenBB, elseBB);
+	 }
 
 	 // Populate the 'then' block
 	 builder.SetInsertPoint(thenBB);
 	 // Visit/translate the body of the 'then' part
-	 stmt->body->accept(this);
-	 builder.CreateBr(mergeBB); // Jump to the merge block after the 'then' part
+	 stmt->thenBody->accept(this);
 
-	 // Add the 'else' block to the function and populate it if there is an else part
-	 //function->getBasicBlockList().push_back(elseBB);
-	 builder.SetInsertPoint(elseBB);
-	 // If there's an else statement, visit it. Else, skip. (right now its not implemented)
-	 //if (stmt->elseStmt) {
-		// stmt->elseStmt->accept(this);
-	 //}
-	 builder.CreateBr(mergeBB); // Jump to the merge block after the 'else' part
+	 if (stmt->elseBody) {
+		 //function->getBasicBlockList().push_back(elseBB);
+		 builder.SetInsertPoint(elseBB);
+		 stmt->elseBody->accept(this);
+	 }
 
-	 // Add the merge block to the function
-	 //function->getBasicBlockList().push_back(mergeBB);
-	 builder.SetInsertPoint(mergeBB);
- }
-
-
- void LLVMCodeGen::visit(const ElseStatement* stmt) {
-	 //Generate LLVM IR for an else statement.
-	 assert(false && "ElseStatement should be visited as part of IfStatement handling.");
  }
 
  void LLVMCodeGen::visit(const AssignmentStatement* stmt) {
@@ -272,11 +323,116 @@ SymbolTable symbolTable;
  }
 
  void LLVMCodeGen::visit(const PrintStatement* stmt) {
-	 //Generate LLVM IR for a print statement, for example log("Print statement");
+	 
+
+	 std::cout << "Visiting print statement in LLVMCodeGen" << std::endl;
+
+	 llvm::Function* printfFunc = module->getFunction("printf");
+	 if (!printfFunc) {
+		 llvm::FunctionType* printfType = llvm::FunctionType::get(
+			 llvm::IntegerType::getInt32Ty(context),
+			 llvm::PointerType::get(llvm::Type::getInt8Ty(context), 0),
+			 true); // Indicates a variadic function
+		 printfFunc = llvm::Function::Create(
+			 printfType,
+			 llvm::Function::ExternalLinkage,
+			 "printf",
+			 module);
+		 std::cout << "Declared printf in module" << std::endl;
+	 }
+
+	 std::cout << "Found printf function " << std::endl;
+
+	 // Evaluate the expression
+	 llvm::Value* valueToPrint = evaluateExpression(stmt->expr.get());
+	 if (!valueToPrint) {
+		 std::cerr << "Failed to evaluate expression for print statement.\n";
+		 return;
+	 }
+	 std::cout << "Printing valueToPrint\n";
+
+	 valueToPrint->print(llvm::errs());
+	 llvm::errs() << "\n"; // For newline
+
+	 std::cout << "\n";
+
+	 std::cout << "Evaluated expression for print statement" << std::endl;
+
+	 llvm::Value* formatStr = nullptr;
+
+	 std::cout << "Created format string for print statement" << std::endl;
+	 
+	 llvm::Value* argForPrintf = valueToPrint;
+
+	 std::cout << "Created argForPrintf for print statement" << std::endl;
+
+		
+	 // Dynamically determine the type of valueToPrint to decide on the format string
+	 if (valueToPrint->getType()->isIntegerTy(32)) {
+		 // Integer
+		 std::cout << "Integer value to print" << std::endl;
+		 formatStr = builder.CreateGlobalStringPtr("%d\n", "printedFormatInt");
+	 }
+	 else if (valueToPrint->getType()->isFloatTy()) {
+		 // Float
+		 std::cout << "Float value to print" << std::endl;
+		 formatStr = builder.CreateGlobalStringPtr("%f\n", "printedFloatInt");
+	 }
+	 else if (valueToPrint->getType()->isPointerTy() && valueToPrint->getType()->getArrayElementType()->isIntegerTy(8)) {
+		 // String (char*)
+		 std::cout << "String value to print" << std::endl;
+		 formatStr = builder.CreateGlobalStringPtr("%s\n", "printFormatString");
+		 // For strings, we directly use valueToPrint as the second argument to printf
+		
+	 }
+	 else {
+		 std::cout << "Unsupported type for print statement" << std::endl;
+		 std::cerr << "Unsupported type for print statement" << std::endl;
+		 return;
+	 }
+
+	 // For integers and floats, generate the call to printf
+	 if (formatStr) {
+		 std::cout << "Creating call to printf" << std::endl;
+		 
+		 
+		 llvm::Value* argForPrintf = valueToPrint; // Default to using the original value
+
+		 if (valueToPrint->getType()->isIntegerTy(32)) {
+			 // Integer
+			 formatStr = builder.CreateGlobalStringPtr("%d\n", "printFormatInt");
+		 }
+		 else if (valueToPrint->getType()->isFloatTy()) {
+			 // Float: Needs conversion to double for printf
+			 formatStr = builder.CreateGlobalStringPtr("%f\n", "printFormatFloat");
+			 argForPrintf = builder.CreateFPExt(valueToPrint, llvm::Type::getDoubleTy(context), "floatToDouble");
+		 }
+		 else if (valueToPrint->getType()->isDoubleTy()) {
+			 // Double
+			 formatStr = builder.CreateGlobalStringPtr("%f\n", "printFormatDouble");
+		 }
+		 else if (valueToPrint->getType()->isPointerTy() && valueToPrint->getType()->isIntegerTy(8)) {
+			 // String (char*)
+			 formatStr = builder.CreateGlobalStringPtr("%s\n", "printFormatString");
+		 }
+		 else {
+			 std::cerr << "Unsupported type for print statement.\n";
+			 return;
+		 }
+
+		 std::vector<llvm::Value*> printfArgs = { formatStr, argForPrintf };
+		 // Create the call to printf
+		 builder.CreateCall(printfFunc, printfArgs);
+
+	 }
+
+
+	 std::cout << "Finished print statement" << std::endl;
  }
 
+
  void LLVMCodeGen::visit(const BlockStatement* stmt) {
-	 std::cout << "Visiting block statement\n";
+	 std::cout << "Visiting block statement" << std::endl;
 	 // Save the current state of local variables for the current scope
 	 auto previousLocals = currentLocals;
 
@@ -291,7 +447,7 @@ SymbolTable symbolTable;
 
  void LLVMCodeGen::visit(const ExpressionStatement* stmt) {
 	 //Generate LLVM IR for an expression statement.
-
+	 llvm::Value* exprValue = evaluateExpression(stmt->expression.get());
  }
 
  void LLVMCodeGen::visit(const BinaryExpression* expr) {
@@ -300,49 +456,78 @@ SymbolTable symbolTable;
 	 llvm::Value* left = evaluateExpression(expr->left.get());
 	 llvm::Value* right = evaluateExpression(expr->right.get());
 
-	 if (!left && !right) {
-		 std::cerr << "Error evaluating binary expression for left and right" << std::endl;
+	 if (!left || !right) {
+		 std::cerr << "Error evaluating binary expression" << std::endl;
 		 lastValue = nullptr;
 		 return;
 	 }
 
-	 std::cout << "Binary expression: " << expr->op << "\n";
+	 std::cout << "Binary operation: " << expr->op << std::endl;
+	 std::cout << "Length of expr->op " << expr->op.length() << std::endl;
+		
+	 for (int i = 0; i < expr->op.length(); ++i) {
+		 std::cout << "Character [" << i << "]: " << std::hex << static_cast<int>(expr->op[i]) << " ('" << expr->op[i] << "')" << std::endl;
+	 }
+	 
 
-	 // Example for addition; actual operation depends on `expr->op`
 	 if (expr->op == "+") {
-		 // Assuming `left` and `right` are integers
+		 std::cout << "Adding left and right values" << std::endl;
 		 lastValue = builder.CreateAdd(left, right, "addtmp");
+		 std::cout << "Successfully added left and right values" << std::endl;
+		 return;
 	 }
 	 else if (expr->op == "-") {
 		lastValue = builder.CreateSub(left, right, "subtmp");
+		return;
+
 	 }
 	 else if (expr->op == "*") {
 		 lastValue = builder.CreateMul(left, right, "multmp");
+		 return;
+
 	 }
 	 else if (expr->op == "/") {
 		 lastValue = builder.CreateSDiv(left, right, "divtmp");
+		 return;
+
 	 }
 	 if (expr->op == "<") {
 		 lastValue = builder.CreateICmpSLT(left, right, "cmptmp");
+		 return;
+
 	 }
 	 else if (expr->op == ">") {
 		 lastValue = builder.CreateICmpSGT(left, right, "cmptmp");
+		 return;
+
 	 }
 	 else if (expr->op == "<=") {
 		 lastValue = builder.CreateICmpSLE(left, right, "cmptmp");
+		 return;
+
 	 }
 	 else if (expr->op == ">=") {
 		 lastValue = builder.CreateICmpSGE(left, right, "cmptmp");
+		 return;
+
 	 }
 	 else if (expr->op == "equals") {
+		 std::cout << "Comparing left and right values for equals" << std::endl;
 		 lastValue = builder.CreateICmpEQ(left, right, "cmptmp");
+		 return;
+
 	 }
 	 else if (expr->op == "notEquals") {
+		 std::cout << "Comparing left and right values for not equal" << std::endl;
 		 lastValue = builder.CreateICmpNE(left, right, "cmptmp");
+		 return;
+
 	 }
 	 else {
 		 std::cerr << "Unsupported binary operation: " << expr->op << std::endl;
 		 lastValue = nullptr;
+		 return;
+
 	 }
  }
 
@@ -370,53 +555,154 @@ SymbolTable symbolTable;
  }
 
  void LLVMCodeGen::visit(const PrimaryExpression* expr) {
-	 //Generate LLVM IR for a primary expression.
-	 // Handle integer literals
+
+	 std::cout << "Looking for primary expression: " << expr->name << std::endl;
+	 std::cout << "Current locals: ";
+	 for (const auto& pair : currentLocals) {
+		 std::cout << pair.first << " ";
+	 }
+	 std::cout << std::endl;
+	 std::cout << "Globals: ";
+	 for (const auto& pair : globals) {
+		 std::cout << pair.first << " ";
+	 }
+	 std::cout << std::endl;
+
 	 static const std::regex intRegex("^[-+]?[0-9]+$");
-	 // Handle floating-point literals
-	 static const std::regex floatRegex("^[-+]?[0-9]*\\.[0-9]+$");
-	 // Handle string literals
+	 static const std::regex floatRegex("^[-+]?([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)$");
 	 static const std::regex stringRegex("^\".*\"$");
+
+	 std::cout << "length of expr->name: " << expr->name.length() << "\n";
+	 std::cout << "expr->name: " << expr->name << "\n";
 
 	 if (std::regex_match(expr->name, intRegex)) {
 		 int value = std::stoi(expr->name);
 		 lastValue = llvm::ConstantInt::get(context, llvm::APInt(32, value, true));
+		 return;
 	 }
 	 else if (std::regex_match(expr->name, floatRegex)) {
+		 std::cout << "Primary expression is float: " << expr->name << std::endl;
 		 float value = std::stof(expr->name);
 		 lastValue = llvm::ConstantFP::get(context, llvm::APFloat(value));
+		 return;
 	 }
 	 else if (expr->name == "true" || expr->name == "false") {
+		 std::cout << "Primary expression is boolean: " << expr->name << std::endl;
 		 bool value = (expr->name == "true");
 		 lastValue = llvm::ConstantInt::get(context, llvm::APInt(1, value, true));
+		 return;
 	 }
 	 else if (std::regex_match(expr->name, stringRegex)) {
 		 // Strings are a bit more complex due to their global nature
 		 lastValue = builder.CreateGlobalStringPtr(expr->name.substr(1, expr->name.length() - 2), expr->name + ".str");
+		 return;
 	 }
 	 else {
+		 std::cout << "Primary expression is identifier: " << expr->name << std::endl;
 		 // Assume it's a variable name. Look up its value in `currentLocals`.
 		 auto it = currentLocals.find(expr->name);
+		 std::cout << "Current locals size: " << currentLocals.size() << std::endl;
+		 
+		 for (const auto& pair : currentLocals) {
+			 std::cout << "Variable name: " << pair.first << ", LLVM Value: ";
+			 pair.second->print(llvm::outs());
+			 std::cout << std::endl;
+		 }
+		 
 		 if (it != currentLocals.end()) {
 			 auto allocaInst = llvm::dyn_cast<llvm::AllocaInst>(it->second);
+			 std::cout << "Initialized allocaInst" << std::endl;
 			 if (!allocaInst) {
-				 std::cerr << "Expected a variable allocation for: " << expr->name << std::endl;
+				 std::cerr << "NULL Current locals: Expected a variable allocatio n for: " << expr->name << std::endl;
 				 lastValue = nullptr;
 				 return;
 			 }
+			 std::cout << "Before we load the value of the variable in currentLocals" << std::endl;
 			 // Load the variable's value
-			 lastValue = builder.CreateLoad(allocaInst->getAllocatedType(), allocaInst, expr->name);
+			 const char* exprName= expr->name.c_str();
+			 
+			 std::cout << "Valid conversion of exprName to const char*" << std::endl;
+			 std::cout << "Current exprName: " << exprName << std::endl;
+			 
+			 lastValue = builder.CreateLoad(allocaInst->getAllocatedType(), allocaInst, exprName);
+			 
+			 if (!lastValue) {
+				 std::cerr << "Failed to create load instruction.\n";
+				 return;
+			 }
+			 else {
+				 std::cout << "After we load the value of the variable in currentLocals" << std::endl;
+				 return;
+			 }
 		 }
-		 else {
-			 std::cerr << "Variable not found: " << expr->name << std::endl;
-			 lastValue = nullptr;
+		 std::cout << "Couldn't find variable: " << expr->name << " in currentLocals" << std::endl;
+		 // If not found locally, try to find it in global variables
+		 auto globalIt = globals.find(expr->name);
+		 if (globalIt != globals.end()) {
+			 // For global variables, simply use the GlobalVariable* directly
+			 llvm::GlobalVariable* globalVar = globalIt->second;
+			 lastValue = builder.CreateLoad(globalVar->getValueType(), globalVar, globalVar->getName());
+			 std::cout << "Found variable: " << expr->name << " in globals" << std::endl;
+			 //std::cerr << "Globals: Expected a variable allocation for: " << expr->name << std::endl;
+			 return;
 		 }
+		 std::cout << "Coundn't find variable: " << expr->name << " in globals or currentLocals" << std::endl;
+
+		 //::cerr << "Variable not found: " << expr->name << std::endl;
+		 lastValue = nullptr;
+		 return;
 	 }
  }
 
  void LLVMCodeGen::visit(const AssignmentExpression* expr) {
-	 //Generate LLVM IR for an assignment expression.
+	 std::cout << "Assignment expression: " << expr->name << " =" << std::endl;
+	 llvm::Value* valueToAssign = evaluateExpression(expr->expression.get());
+	 if (!valueToAssign) {
+		 std::cerr << "Error evaluating the expression to assign." << std::endl;
+		 return;
+	 }
+	 std::cout << "Value to assign was evaluated successfully" << std::endl;
+
+	 // Look for the variable in the local variables first, then in the globals
+	 auto localVarIt = currentLocals.find(expr->name);
+	 if (localVarIt != currentLocals.end()) {
+		 std::cout << "Found variable in currentLocals" << std::endl;
+		 builder.CreateStore(valueToAssign, localVarIt->second);
+		 lastValue = nullptr;
+		 return;
+	 }
+	 else {
+		 auto globalVarIt = globals.find(expr->name);
+
+		 if (globalVarIt != globals.end()) {
+			 std::cout << "Found variable: " << expr->name << " in globals assignment expression" << std::endl;
+			 if (valueToAssign->getType() != globalVarIt->second->getValueType()) {
+				 llvm::errs() << "Type mismatch between value to assign and target global variable.\n";
+				 // Optionally print the types for debugging
+				 valueToAssign->getType()->print(llvm::errs());
+				 llvm::errs() << "\n";
+				 globalVarIt->second->getType()->print(llvm::errs());
+				 llvm::errs() << "\n";
+				 return;
+			 }
+			 valueToAssign->getType()->print(llvm::errs());
+			 llvm::errs() << "\n";
+			 globalVarIt->second->getValueType()->print(llvm::errs());
+			 llvm::errs() << "\n";
+
+			 builder.CreateStore(valueToAssign, globalVarIt->second);
+			 std::cout << "Was able to create store instruction" << std::endl;
+			 lastValue = nullptr;
+			 return;
+		 }
+		 else {
+			 std::cerr << "Variable " << expr->name << " not found." << std::endl;
+			 lastValue = nullptr;
+			 return;
+		 }
+	 }
  }
+
 
  void LLVMCodeGen::visit(const FunctionDefinition* funcDef) {
 	 std::cout << funcDef->toString() << std::endl;
@@ -452,6 +738,7 @@ SymbolTable symbolTable;
 
 	 llvm::Type* returnType = nullptr;
 	 if (funcDef->returnType == "int") {
+		 std::cout << "RETURN TYPE IS INT" << std::endl;
 		 returnType = llvm::Type::getInt32Ty(context);
 	 }
 	 else if (funcDef->returnType == "float") {
@@ -469,18 +756,20 @@ SymbolTable symbolTable;
 
 	 llvm::FunctionType* functionType = llvm::FunctionType::get(returnType, paramTypes, false);
 	 llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, funcDef->name, module);
-
+	 std::cout << "Function created\n";	
 	 // Create a new basic block to start insertion into.
-	 llvm::BasicBlock* block = llvm::BasicBlock::Create(context, "entry", function);
-	 builder.SetInsertPoint(block);
+	 llvm::BasicBlock* entryBB = llvm::BasicBlock::Create(context, "entry", function);
+	 builder.SetInsertPoint(entryBB);
 
 	 currentFunction = function; // Track the current function
-
+	 
 	 // Record the function arguments in the NamedValues map.
 	 unsigned idx = 0;
-	 for (auto& arg : function->args()) {
-
+	 for (auto it = function->arg_begin(); it != function->arg_end(); ++it) {
+		 llvm::Argument& arg = *it;
+		 
 		 arg.setName(funcDef->parameters[idx].name);
+
 		 // Create an alloca for this variable.
 		 llvm::AllocaInst* alloca = llvm_util::createEntryBlockAlloca(function, std::string(arg.getName()), arg.getType());
 
@@ -488,22 +777,28 @@ SymbolTable symbolTable;
 		 builder.CreateStore(&arg, alloca);
 
 		 // Add arguments to variable currentLocals
-		 currentLocals[std::string(arg.getName())] = alloca;
+		 currentLocals[arg.getName().str()] = alloca;
 
 		 idx++;
 	 }
 
 	 // Visit each statement in the function body to generate their IR
 	 for (const auto& stmt : funcDef->body) {
+		 std::cout << "Visiting function body" << std::endl;
 		 stmt->accept(this);
 	 }
 
-	 // Add a return statement for void functions if not present
-	 if (returnType == llvm::Type::getVoidTy(context) && !block->getTerminator()) {
-		 builder.CreateRetVoid();
+	 std::cout << "Finished visiting function body" << std::endl;
+
+	 //After visiting all statements, ensure the current block has a terminator
+	 auto currentBB = builder.GetInsertBlock();
+	 if (!currentBB->getTerminator()) {
+		// Handle other types or throw an error indicating a missing return
+		std::cout << "Error: Missing return statement in non-void function '" << funcDef->name << "'.\n"; 
 	 }
 
 	 currentFunction = nullptr; // Clear the current function
+	 currentLocals.clear();
 
 	 // Optimize the function.
 	 // (You may add optimization passes here)
@@ -511,12 +806,51 @@ SymbolTable symbolTable;
 	 // Reset the builder's insert point
 	 builder.ClearInsertionPoint();
 
-	 // Verify the generated code, checking for consistency.
+	 std::cout << "Resetted builder's insertion point" << std::endl;
+
+     // Verify the generated code, checking for consistency.
 	 llvm::verifyFunction(*function, &llvm::errs());
+
+	 std::cout << "Function definition visited" << std::endl;
  }
 
  void LLVMCodeGen::visit(const FunctionCall* call) {
-	 //Generate LLVM IR for a function call.
- }
+		// Step 1: Find the LLVM function in the current module by name.
+		
+		std::cout << "Function call name: " << call->name << std::endl;
 
+		llvm::Function* calleeFunction = module->getFunction(call->name);
+		if (!calleeFunction) {
+			std::cerr << "Unknown function referenced: " << call->name << std::endl;
+			return;
+		}
 
+		std::cout << "Found function in module" << std::endl;
+
+		// Step 2: Evaluate the arguments and prepare them for the call instruction.
+		std::vector<llvm::Value*> argsValues;
+		for (const auto& arg : call->arguments) {
+			llvm::Value* argValue = evaluateExpression(arg.get());
+			if (!argValue) {
+				std::cout << "Argument evaluation failed for function call: " << call->name << std::endl;
+				std::cerr << "Argument evaluation failed for function call: " << call->name << std::endl;
+				return;
+			}
+			argsValues.push_back(argValue);
+		}
+
+		std::cout << "Evaluated arguments for function call" << std::endl;
+
+		// Step 3: Create the call instruction.
+		// The 'CreateCall' method can vary depending on the LLVM version.
+		// For LLVM 11 and later, you might use:
+		llvm::CallInst* callInst = builder.CreateCall(calleeFunction, argsValues, "calltmp");
+
+		std::cout << "Created call instruction" << std::endl;
+
+		// For demonstration purposes, we'll assume the function calls do not return void.
+		// If they can return void, you'll need to handle that case accordingly.
+		lastValue = callInst;
+
+		std::cout << "Function call visited" << std::endl;
+}
