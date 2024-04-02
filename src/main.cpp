@@ -4,7 +4,9 @@
 #include <memory>
 #include <filesystem>
 #include <fstream>
+
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/Support/raw_ostream.h"
 
 #include "../include/lexer/Lexer.h"
 #include "../include/parser/Parser.h"
@@ -16,54 +18,47 @@ static void runTestForFile(const std::string& filePath) {
     std::ifstream testFile(filePath);
     if (!testFile) {
         std::cerr << "Failed to open test file: " << filePath << std::endl;
-
+        return;
     }
 
-    // Read the entire file into a string
     std::string fileContent((std::istreambuf_iterator<char>(testFile)),
         (std::istreambuf_iterator<char>()));
-
-    // Initialize the lexer and parser with the file content
     Lexer lexer(fileContent.c_str());
-    std::cout << "Lexer worked" << std::endl;
     Parser parser(lexer);
     std::filesystem::path testPath = filePath;
-    std::string filename = testPath.filename().string();
+    std::string filename = testPath.filename().replace_extension(".ll").string(); // Change extension to .ll
 
-    try
-    {
+    try {
         auto program = parser.parseProgram();
-
-        std::cout << "Parsed program as this: " << program->toString() << std::endl;
-
         SymbolTable symbolTable;
-
         SemanticAnalyzer semanticAnalyzer(symbolTable);
-
         semanticAnalyzer.visit(program.get());
-
-        std::cout << "Program is semantically correct!" << std::endl;
-
         LLVMCodeGen llvmCodeGen;
+        program->accept(&llvmCodeGen);
 
-        program->accept(&llvmCodeGen); 
-        
         llvm::Module* module = llvmCodeGen.getModule();
         if (module) {
-            module->print(llvm::outs(), nullptr);
+            std::error_code EC;
+            std::string outputFilename = "llvmGenerated/" + filename; // Adjust the output directory as needed
+            llvm::raw_fd_ostream dest(outputFilename, EC);
+
+            if (EC) {
+                std::cerr << "Could not open file: " << EC.message() << ", for writing the LLVM IR to " << outputFilename << std::endl;
+                return;
+            }
+
+            module->print(dest, nullptr);
+            std::cout << "LLVM IR was written to " << outputFilename << std::endl;
         }
         else {
             std::cerr << "Module is null. No IR generated." << std::endl;
         }
-
-        // If the parsing succeeds, it means the entire program (file content) is valid.
-        std::cout << "\033[32mTest Passed\033[0m" << " in " << filename << std::endl;
     }
-    catch (const std::exception& e){
-        //std::cerr << "Compilation finished with errors." << std::endl;
+    catch (const std::exception& e) {
         std::cerr << "\033[31mTest Failed\033[0m" << " in " << filename << " with error: " << e.what() << std::endl;
     }
 }
+
 
 int main() {
     // Adjusted for testing entire files rather than line-by-line
