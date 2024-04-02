@@ -471,7 +471,7 @@ class FunctionCall : public Function {
             std::string args;
             for (const auto& arg : arguments) {
                 if (!args.empty()) args += ", "; 
-                    args += arg->toString(); 
+                    args = args + "|" + arg->toString() + "|";
                 }
             return "FunctionCall " + name + "(" + args + ")";
         }

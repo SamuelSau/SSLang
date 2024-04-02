@@ -4,18 +4,17 @@
 
 SymbolTable symbolTable;
 
- LLVMCodeGen::LLVMCodeGen()
-     : module(new llvm::Module("MyModule", context)), builder(context) {
-     //Initialize module and IR builder
- }
+LLVMCodeGen::LLVMCodeGen()
+	: module(new llvm::Module("MyModule", context)), builder(context) {
+}
 
- LLVMCodeGen::~LLVMCodeGen() {
-     delete module;
- }
+LLVMCodeGen::~LLVMCodeGen() {
+	delete module;
+}
 
- llvm::Module* LLVMCodeGen::getModule() const {
-	 return module;
- }
+llvm::Module* LLVMCodeGen::getModule() const {
+	return module;
+}
 
  llvm::Value* LLVMCodeGen::evaluateExpression(Expression* expr) {
 	 std::cout << "Beginning of evaluateExpression()\n";
@@ -33,18 +32,25 @@ SymbolTable symbolTable;
  }
 
  void LLVMCodeGen::tryLoadAndDebug(llvm::Value* ptr, const PrimaryExpression* expr) {
+	 std::cout<< "Attempting to load and debug in tryLoadAndDebug\n";
 
 	 if (!ptr) {
 		 std::cerr << "Error: nullptr passed to tryLoadAndDebug.\n";
 		 return;
 	 }
+	 std::cout << "Ptr is not nullptr in tryLoadAndDebug\n";
 
 	 llvm::Type* type = nullptr;
+
+	 std::cout << "Setting type for load instruction to nullptr\n";
+
 	 if (auto allocaInst = llvm::dyn_cast<llvm::AllocaInst>(ptr)) {
 		 if (!allocaInst) {
 			 std::cerr << "Expected an AllocaInst for local variable: " << expr->name << std::endl;
 		 }
+		 std::cout << "Got allocaInst\n";
 		 type = allocaInst->getAllocatedType();
+		 std::cout << "Set the type for allocaInst\n";
 	 }
 	 else if (auto globalVar = llvm::dyn_cast<llvm::GlobalVariable>(ptr)) {
 		 if (!globalVar) {
@@ -194,23 +200,39 @@ SymbolTable symbolTable;
 
 	 else {
 		 // Global string variable case
+		 //auto& context = builder.getContext();
+		 //auto strValue = llvm::ConstantDataArray::getString(context, decl->value, true); // true for adding null terminator
+		 //auto strGlobalVar = new llvm::GlobalVariable(*module, strValue->getType(), true, llvm::GlobalValue::PrivateLinkage, strValue, decl->name + ".globalStr");
+
+		 //// Create a constant pointer to the first element of the string
+		 //auto zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), 0);
+		 //std::vector<llvm::Constant*> indices{ zero, zero };
+		 //auto strPtr = llvm::ConstantExpr::getGetElementPtr(strValue->getType(), strGlobalVar, indices);
+
+		 //// Store the pointer in a global variable
+		 //llvm::GlobalVariable* gVar = new llvm::GlobalVariable(*module, strPtr->getType(), false, llvm::GlobalValue::ExternalLinkage, strPtr, decl->name);
+
+		 //// Optionally, set alignment for the global variable
+		 //gVar->setAlignment(llvm::MaybeAlign(1)); // Alignment for characters is typically 1
+
+		 //// Save the global variable in globals for later reference
+		 //globals[decl->name] = gVar;
 		 auto& context = builder.getContext();
-		 auto strValue = llvm::ConstantDataArray::getString(context, decl->value, true); // true for adding null terminator
-		 auto strGlobalVar = new llvm::GlobalVariable(*module, strValue->getType(), true, llvm::GlobalValue::PrivateLinkage, strValue, decl->name + ".globalStr");
+		 llvm::Constant* strConstant = llvm::ConstantDataArray::getString(context, decl->value, true);
+		 llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
+			 *module,
+			 strConstant->getType(),
+			 true, // isConstant
+			 llvm::GlobalValue::PrivateLinkage,
+			 strConstant,
+			 decl->name
+		 );
+		 gVar->setAlignment(llvm::MaybeAlign(1));
 
-		 // Create a constant pointer to the first element of the string
+		 // If you need a pointer to the first element of this array for some reason:
 		 auto zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), 0);
-		 std::vector<llvm::Constant*> indices{ zero, zero };
-		 auto strPtr = llvm::ConstantExpr::getGetElementPtr(strValue->getType(), strGlobalVar, indices);
-
-		 // Store the pointer in a global variable
-		 llvm::GlobalVariable* gVar = new llvm::GlobalVariable(*module, strPtr->getType(), false, llvm::GlobalValue::ExternalLinkage, strPtr, decl->name);
-
-		 // Optionally, set alignment for the global variable
-		 gVar->setAlignment(llvm::MaybeAlign(1)); // Alignment for characters is typically 1
-
-		 // Save the global variable in globals for later reference
-		 globals[decl->name] = gVar;
+		 std::vector<llvm::Constant*> indices = { zero, zero };
+		 llvm::Constant* strPtr = llvm::ConstantExpr::getGetElementPtr(strConstant->getType(), gVar, indices);
 	 }
  }
 
@@ -650,14 +672,15 @@ SymbolTable symbolTable;
 	 else {
 		 std::cout << "Primary expression is identifier: " << expr->name << std::endl;
 		 // Assume it's a variable name. Look up its value in `currentLocals`.
-		 auto localVarIt = currentLocals.find(expr->name);
-		 
-		 if (localVarIt != currentLocals.end()) {
-			 std::cout << "Found variable: " << expr->name << " in currentLocals" << std::endl;
-			 tryLoadAndDebug(localVarIt->second, expr);
-			 return;
-		 }
-		 
+		 //auto localVarIt = currentLocals.find(expr->name);
+		 //std::cout << "Trying to find variable: " << expr->name << " in currentLocals\n";
+		 //if (localVarIt != currentLocals.end()) {
+			// std::cout << "Found variable: " << expr->name << " in currentLocals" << std::endl;
+			// tryLoadAndDebug(localVarIt->second, expr);
+			// std::cout << "Finished tryLoadAndDebug\n";
+			// return;
+		 //}
+		 //
 		 // If not found locally, try to find it in global variables
 		 auto globalIt = globals.find(expr->name);
 		 if (globalIt != globals.end()) {
@@ -839,7 +862,7 @@ SymbolTable symbolTable;
 
 		// Step 2: Evaluate the arguments and prepare them for the call instruction.
 		std::vector<llvm::Value*> argsValues;
-		for (const auto& arg : call->arguments) {
+		for (auto& arg : call->arguments) {
 			llvm::Value* argValue = evaluateExpression(arg.get());
 			std::cout << "Evaluated an argument for function call\n";
 			if (!argValue) {

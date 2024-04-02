@@ -235,6 +235,11 @@ void SemanticAnalyzer::visit(const FunctionCall* call) {
     if (!funcInfo) {
        throw std::runtime_error("Function " + call->name + " not declared.");
     }
+
+    // Check if the number of arguments in the call matches the number of parameters in the function definition
+    if (call->arguments.size() != funcInfo->parameterInfo.size()) {
+        throw std::runtime_error("Function '" + call->name + "' called with incorrect number of arguments. Expected " + std::to_string(funcInfo->parameterInfo.size()) + ", got " + std::to_string(call->arguments.size()) + ".");
+    }
 }
 
 void SemanticAnalyzer::visit(const Program* program) {

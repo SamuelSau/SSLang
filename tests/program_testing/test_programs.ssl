@@ -6,9 +6,11 @@ int p = 7;
 int Q = 9;
 int z = 0;
 int t = 2;
+int bb = 100;
 str informalGreeting = "sup";
 
-function add(int: x, int: y) -> int {
+function add() -> int {
+    log(bb);
 	if (x equals 2){
 		loop range(2,3){
 		 log(t);
@@ -22,4 +24,4 @@ function add(int: x, int: y) -> int {
 		ret(y);
 	}
 }
-call add(x,y);
+call add();
