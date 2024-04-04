@@ -1,8 +1,7 @@
 #include "llvmGen/LLVMCodeGen.h"
 #include "llvmGen/LLVMUtility.h"
 #include "symbolTable/SymbolTable.h"
-
-SymbolTable symbolTable;
+#include "llvm/ADT/ArrayRef.h"
 
 LLVMCodeGen::LLVMCodeGen()
 	: module(new llvm::Module("MyModule", context)), builder(context) {
@@ -82,30 +81,31 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 }
  }
 
-
-
- void LLVMCodeGen::visit(const Program* program) {
+ void LLVMCodeGen::ensureMainFunctionExist() {
 	 llvm::Function* mainFunction = module->getFunction("main");
 	 if (!mainFunction) {
-		 // Create a 'main' function prototype
+		 // Create the 'main' function if it does not exist
+		 std::cout << "Creating main function" << std::endl;
 		 llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getInt32Ty(context), false);
 		 mainFunction = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
-		 llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "entry", mainFunction);
-		 builder.SetInsertPoint(entry);
+		 llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(context, "entry", mainFunction);
 	 }
-	 else {
-		 std::cerr << "Error: 'main' function is already defined by the user. The program should not define its own 'main' function.\n";
-		 return; // Optionally handle this situation more gracefully
+
+	 // Ensure there's a basic block to insert into
+	 if (mainFunction->empty()) {
+		 std::cout << "Creating basic block for main function\n";
+		 llvm::BasicBlock::Create(context, "entry", mainFunction);
 	 }
+
+	 // Set insertion point to the start of 'main' by default, or to a specific place as needed
+	 builder.SetInsertPoint(&mainFunction->getEntryBlock());
+ }
+
+ void LLVMCodeGen::visit(const Program* program) {
 
 	for (const auto& decl : program->declarations) {
 		decl->accept(this);
 	}
-
-	for (const auto& func : program->functions) {
-		func->accept(this);
-	}
-
 	for (const auto& stmt : program->statements) {
 		stmt->accept(this);
 	}
@@ -114,11 +114,24 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		expr->accept(this);
 	}
 
+	for (const auto& func : program->functions) {
+		func->accept(this);
+	}
+
+	ensureMainFunctionExist();
+
 	// Complete the 'main' function with a return statement. Return 0 as a conventional success code.
 	builder.CreateRet(llvm::ConstantInt::get(context, llvm::APInt(32, 0)));
 
+	std::cout << "Finished creating return statement for main function\n";
+
 	// Reset the builder's insertion point to avoid dangling references
 	builder.ClearInsertionPoint();
+
+    std::cout << "Finished visiting program\n";
+
+	currentLocals.clear();
+	globals.clear();
 	 
  }
 
@@ -199,24 +212,6 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 }
 
 	 else {
-		 // Global string variable case
-		 //auto& context = builder.getContext();
-		 //auto strValue = llvm::ConstantDataArray::getString(context, decl->value, true); // true for adding null terminator
-		 //auto strGlobalVar = new llvm::GlobalVariable(*module, strValue->getType(), true, llvm::GlobalValue::PrivateLinkage, strValue, decl->name + ".globalStr");
-
-		 //// Create a constant pointer to the first element of the string
-		 //auto zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), 0);
-		 //std::vector<llvm::Constant*> indices{ zero, zero };
-		 //auto strPtr = llvm::ConstantExpr::getGetElementPtr(strValue->getType(), strGlobalVar, indices);
-
-		 //// Store the pointer in a global variable
-		 //llvm::GlobalVariable* gVar = new llvm::GlobalVariable(*module, strPtr->getType(), false, llvm::GlobalValue::ExternalLinkage, strPtr, decl->name);
-
-		 //// Optionally, set alignment for the global variable
-		 //gVar->setAlignment(llvm::MaybeAlign(1)); // Alignment for characters is typically 1
-
-		 //// Save the global variable in globals for later reference
-		 //globals[decl->name] = gVar;
 		 auto& context = builder.getContext();
 		 llvm::Constant* strConstant = llvm::ConstantDataArray::getString(context, decl->value, true);
 		 llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
@@ -672,14 +667,14 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 else {
 		 std::cout << "Primary expression is identifier: " << expr->name << std::endl;
 		 // Assume it's a variable name. Look up its value in `currentLocals`.
-		 //auto localVarIt = currentLocals.find(expr->name);
-		 //std::cout << "Trying to find variable: " << expr->name << " in currentLocals\n";
-		 //if (localVarIt != currentLocals.end()) {
-			// std::cout << "Found variable: " << expr->name << " in currentLocals" << std::endl;
-			// tryLoadAndDebug(localVarIt->second, expr);
-			// std::cout << "Finished tryLoadAndDebug\n";
-			// return;
-		 //}
+		 auto localVarIt = currentLocals.find(expr->name);
+		 std::cout << "Trying to find variable: " << expr->name << " in currentLocals\n";
+		 if (localVarIt != currentLocals.end()) {
+			 std::cout << "Found variable: " << expr->name << " in currentLocals" << std::endl;
+			 tryLoadAndDebug(localVarIt->second, expr);
+			 std::cout << "Finished tryLoadAndDebug\n";
+			 return;
+		 }
 		 //
 		 // If not found locally, try to find it in global variables
 		 auto globalIt = globals.find(expr->name);
@@ -833,9 +828,6 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 currentFunction = nullptr; // Clear the current function
 	 //currentLocals.clear();
 
-	 // Optimize the function.
-	 // (You may add optimization passes here)
-
 	 // Reset the builder's insert point
 	 builder.ClearInsertionPoint();
 
@@ -849,6 +841,11 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
  void LLVMCodeGen::visit(const FunctionCall* call) {
 		// Step 1: Find the LLVM function in the current module by name.
+		
+	    ensureMainFunctionExist();
+		
+		std::cout << "Main function existed in FunctionCall" <<	std::endl;
+
 		
 		std::cout << "Function call name: " << call->name << std::endl;
 
@@ -876,15 +873,24 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		std::cout << "Evaluated arguments for function call" << std::endl;
 
 		// Step 3: Create the call instruction.
-		llvm::CallInst* callInst = builder.CreateCall(calleeFunction, argsValues, "calltmp");
 
+		if (!builder.GetInsertBlock()) {
+			std::cerr << "No insertion block set for IRBuilder.\n";
+			return;
+		}
+		
+		llvm::CallInst* callInst = builder.CreateCall(calleeFunction, argsValues);
+		
 		std::cout << "Created call instruction" << std::endl;
+
+		functionCalls.push_back(call->name);
+
+		std::cout << "Added function call to functionCalls\n";
 
 		// For demonstration purposes, we'll assume the function calls do not return void.
 		lastValue = callInst;
 
-		/*currentLocals.clear();
-		globals.clear();*/
+		std::cout << "Last value for call instruction: " << lastValue << std::endl;
 
 		std::cout << "Function call visited" << std::endl;
 }

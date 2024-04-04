@@ -55,7 +55,7 @@ endif()
 llvm_map_components_to_libnames(llvmLibs Core Passes Support)
 
 # Main Executable
-add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp src/llvmGen/LLVMCodeGen.cpp src/llvmGen/LLVMUtility.cpp)
+add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp src/llvmGen/LLVMCodeGen.cpp src/llvmGen/LLVMUtility.cpp src/llvmOptimize/LLVMOptimizer.cpp) 
 
 # Test Executables
 add_executable(SSLangDeclareTests tests/declaration_testing/declaration_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)

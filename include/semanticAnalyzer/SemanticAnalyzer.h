@@ -1,9 +1,6 @@
 #ifndef SEMANTIC_ANALYZER_H
 #define SEMANTIC_ANALYZER_H
 
-//#include "symbolTable/SymbolTable.h"
-//#include "visitor/Visitor.h"
-
 #include "../symbolTable/SymbolTable.h"
 #include "../visitor/Visitor.h"
 

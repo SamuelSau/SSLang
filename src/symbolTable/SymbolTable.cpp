@@ -1,4 +1,3 @@
-//#include "symbolTable/SymbolTable.h"
 #include <iostream>
 #include "../../include/symbolTable/SymbolTable.h"
 
@@ -101,4 +100,3 @@ void SymbolTable::printContents() const {
         scopeLevel--;
     }
 }
-

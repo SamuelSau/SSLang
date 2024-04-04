@@ -240,6 +240,7 @@ void SemanticAnalyzer::visit(const FunctionCall* call) {
     if (call->arguments.size() != funcInfo->parameterInfo.size()) {
         throw std::runtime_error("Function '" + call->name + "' called with incorrect number of arguments. Expected " + std::to_string(funcInfo->parameterInfo.size()) + ", got " + std::to_string(call->arguments.size()) + ".");
     }
+
 }
 
 void SemanticAnalyzer::visit(const Program* program) {
@@ -250,11 +251,11 @@ void SemanticAnalyzer::visit(const Program* program) {
     for (const auto& stmt : program->statements) {
         stmt->accept(this);
     }
-    for (const auto& func : program->functions) {
-        func->accept(this);
-    }
     for (const auto& expr : program->expressions) {
         expr->accept(this);
+    }
+    for (const auto& func : program->functions) {
+        func->accept(this);
     }
 
 }

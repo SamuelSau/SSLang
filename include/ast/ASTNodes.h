@@ -8,9 +8,6 @@
 #include <sstream>
 #include <set>
 
-
-//#include "symbolTable/SymbolTable.h"
-//#include "visitor/Visitor.h"
 #include "../symbolTable/SymbolTable.h"
 #include "../visitor/Visitor.h"
 
@@ -287,6 +284,7 @@ class UnaryExpression : public Expression {
             visitor->visit(this);
         }
 };
+
 
 //Statements
 

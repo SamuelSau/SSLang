@@ -1,72 +1,78 @@
 ; ModuleID = 'MyModule'
 source_filename = "MyModule"
 
-@q = global float 0x3FD3333340000000, align 4
-@isDeclared = global i1 false, align 1
-@x = global i32 2, align 4
-@y = global i32 3, align 4
-@p = global i32 7, align 4
-@Q = global i32 9, align 4
-@z = global i32 0, align 4
-@t = global i32 2, align 4
-@bb = global i32 100, align 4
-@informalGreeting = private constant [4 x i8] c"sup\00", align 1
-@printedFormatInt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@printFormatInt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@printedFormatInt.1 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@printFormatInt.2 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@printedFormatInt.3 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@q = local_unnamed_addr global float 0x3FD3333340000000, align 4
+@isDeclared = local_unnamed_addr global i1 false, align 1
+@x = local_unnamed_addr global i32 2, align 4
+@y = local_unnamed_addr global i32 3, align 4
+@p = local_unnamed_addr global i32 7, align 4
+@Q = local_unnamed_addr global i32 9, align 4
+@z = local_unnamed_addr global i32 0, align 4
+@t = local_unnamed_addr global i32 2, align 4
+@bb = local_unnamed_addr global i32 100, align 4
 @printFormatInt.4 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
-define i32 @main() {
+; Function Attrs: nofree nounwind
+define i32 @returnValidNumber() local_unnamed_addr #0 {
 entry:
-}
-
-define i32 @add() {
-entry:
-  %loopVar = alloca i32, align 4
   %bb = load i32, ptr @bb, align 4
-  %0 = call i32 (ptr, ...) @printf(ptr @printFormatInt, i32 %bb)
+  %0 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printFormatInt.4, i32 %bb)
   %x = load i32, ptr @x, align 4
   %cmptmp = icmp eq i32 %x, 2
-  br i1 %cmptmp, label %then, label %else
+  br i1 %cmptmp, label %forBody, label %whileCond.preheader
 
-then:                                             ; preds = %entry
-  store i32 2, ptr %loopVar, align 4
-  br label %forCond
+whileCond.preheader:                              ; preds = %entry
+  %cmptmp35 = icmp slt i32 %x, 10
+  br i1 %cmptmp35, label %whileBody, label %common.ret
 
-else:                                             ; preds = %entry
-  br label %whileCond
-
-forCond:                                          ; preds = %forBody, %then
-  %loopVar1 = load i32, ptr %loopVar, align 4
-  %loopcond = icmp slt i32 %loopVar1, 3
-  br i1 %loopcond, label %forBody, label %forEnd
-
-forBody:                                          ; preds = %forCond
+forBody:                                          ; preds = %entry
   %t = load i32, ptr @t, align 4
-  %1 = call i32 (ptr, ...) @printf(ptr @printFormatInt.2, i32 %t)
-  %nextVar = add i32 %loopVar1, 1
-  store i32 %nextVar, ptr %loopVar, align 4
-  br label %forCond
+  %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printFormatInt.4, i32 %t)
+  br label %common.ret
 
-forEnd:                                           ; preds = %forCond
-  %Q = load i32, ptr @Q, align 4
-  ret i32 %Q
+common.ret:                                       ; preds = %whileBody, %whileCond.preheader, %forBody
+  %common.ret.op.in = phi ptr [ @Q, %forBody ], [ @y, %whileCond.preheader ], [ @y, %whileBody ]
+  %common.ret.op = load i32, ptr %common.ret.op.in, align 4
+  ret i32 %common.ret.op
 
-whileCond:                                        ; preds = %whileBody, %else
-  %x2 = load i32, ptr @x, align 4
-  %cmptmp3 = icmp slt i32 %x2, 10
-  br i1 %cmptmp3, label %whileBody, label %whileExit
-
-whileBody:                                        ; preds = %whileCond
-  %x4 = load i32, ptr @x, align 4
-  %2 = call i32 (ptr, ...) @printf(ptr @printFormatInt.4, i32 %x4)
-  br label %whileCond
-
-whileExit:                                        ; preds = %whileCond
-  %y = load i32, ptr @y, align 4
-  ret i32 %y
+whileBody:                                        ; preds = %whileCond.preheader, %whileBody
+  %x26 = phi i32 [ %x2.pr, %whileBody ], [ %x, %whileCond.preheader ]
+  %2 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printFormatInt.4, i32 %x26)
+  %x2.pr = load i32, ptr @x, align 4
+  %cmptmp3 = icmp slt i32 %x2.pr, 10
+  br i1 %cmptmp3, label %whileBody, label %common.ret
 }
 
-declare i32 @printf(ptr, ...)
+; Function Attrs: nofree nounwind
+declare noundef i32 @printf(ptr nocapture noundef readonly, ...) local_unnamed_addr #0
+
+; Function Attrs: nofree nounwind
+define noundef i32 @main() local_unnamed_addr #0 {
+entry:
+  %bb.i = load i32, ptr @bb, align 4
+  %0 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printFormatInt.4, i32 %bb.i)
+  %x.i = load i32, ptr @x, align 4
+  %cmptmp.i = icmp eq i32 %x.i, 2
+  br i1 %cmptmp.i, label %forBody.i, label %whileCond.preheader.i
+
+whileCond.preheader.i:                            ; preds = %entry
+  %cmptmp35.i = icmp slt i32 %x.i, 10
+  br i1 %cmptmp35.i, label %whileBody.i, label %returnValidNumber.exit
+
+forBody.i:                                        ; preds = %entry
+  %t.i = load i32, ptr @t, align 4
+  %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printFormatInt.4, i32 %t.i)
+  br label %returnValidNumber.exit
+
+whileBody.i:                                      ; preds = %whileCond.preheader.i, %whileBody.i
+  %x26.i = phi i32 [ %x2.pr.i, %whileBody.i ], [ %x.i, %whileCond.preheader.i ]
+  %2 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printFormatInt.4, i32 %x26.i)
+  %x2.pr.i = load i32, ptr @x, align 4
+  %cmptmp3.i = icmp slt i32 %x2.pr.i, 10
+  br i1 %cmptmp3.i, label %whileBody.i, label %returnValidNumber.exit
+
+returnValidNumber.exit:                           ; preds = %whileBody.i, %whileCond.preheader.i, %forBody.i
+  ret i32 0
+}
+
+attributes #0 = { nofree nounwind }

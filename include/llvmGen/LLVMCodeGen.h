@@ -11,13 +11,14 @@
 #include "llvm/IR/Verifier.h"
 
 class LLVMCodeGen : public IVisitor {
-public:
+public:  
     LLVMCodeGen();
     ~LLVMCodeGen();
 
     llvm::Module* getModule() const;
     llvm::Value* evaluateExpression(Expression* expr);
     void tryLoadAndDebug(llvm::Value* ptr, const PrimaryExpression* expr);
+    void ensureMainFunctionExist();
 
     // Visitor functions for different AST nodes
     void visit(const Program* program) override;
@@ -48,10 +49,13 @@ private:
 
     llvm::Function* currentFunction = nullptr;
     llvm::Value* lastValue = nullptr;
-    
+
+
     std::unordered_map<std::string, llvm::Value*> currentLocals; // Current function's local variables
     std::unordered_map<std::string, llvm::GlobalVariable*> globals; // Global variables
     
+    std::vector<std::string> functionCalls;
+
     // Add any additional state needed for code generation
 
 }; 

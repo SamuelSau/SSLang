@@ -9,7 +9,7 @@ int t = 2;
 int bb = 100;
 str informalGreeting = "sup";
 
-function add() -> int {
+function returnValidNumber() -> int {
     log(bb);
 	if (x equals 2){
 		loop range(2,3){
@@ -24,4 +24,4 @@ function add() -> int {
 		ret(y);
 	}
 }
-call add();
+call returnValidNumber();

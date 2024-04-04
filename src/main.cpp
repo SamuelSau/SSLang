@@ -7,12 +7,15 @@
 
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/LLVMContext.h"
 
 #include "../include/lexer/Lexer.h"
 #include "../include/parser/Parser.h"
 #include "../include/symbolTable/SymbolTable.h"
 #include "../include/semanticAnalyzer/SemanticAnalyzer.h"
 #include "../include/llvmGen/LLVMCodeGen.h"
+#include "llvmOptimize/LLVMOptimizer.h"
+
 
 static void runTestForFile(const std::string& filePath) {
     std::ifstream testFile(filePath);
@@ -29,15 +32,24 @@ static void runTestForFile(const std::string& filePath) {
     std::string filename = testPath.filename().replace_extension(".ll").string(); // Change extension to .ll
 
     try {
-        auto program = parser.parseProgram();
+        auto program = parser.parseProgram(); 
+        std::cout << "Parsed program successfully\n";
         SymbolTable symbolTable;
         SemanticAnalyzer semanticAnalyzer(symbolTable);
+        std::cout << "Visiting program for semantic analysis\n";
         semanticAnalyzer.visit(program.get());
+        std::cout << "Semantic analysis successful\n";
         LLVMCodeGen llvmCodeGen;
+        std::cout << "LLVMCodeGen object created successfully\n";
         program->accept(&llvmCodeGen);
+        std::cout << "Visited program for llvm codegen successfully\n";
 
         llvm::Module* module = llvmCodeGen.getModule();
         if (module) {
+
+            // Optimize the generated LLVM IR
+            LLVMOptimizer::optimize(module);
+
             std::error_code EC;
             std::string outputFilename = "llvmGenerated/" + filename; // Adjust the output directory as needed
             llvm::raw_fd_ostream dest(outputFilename, EC);
