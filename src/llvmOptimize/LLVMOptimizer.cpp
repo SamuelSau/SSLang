@@ -1,17 +1,16 @@
 #include <iostream>
 
-
 #include "llvm/IR/PassManager.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Analysis/LoopAnalysisManager.h"
-#include "llvmOptimize/LLVMOptimizer.h"
 #include "llvm/Analysis/CGSCCPassManager.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/OptimizationLevel.h"
 #include "llvm/IR/Verifier.h"
 
+#include "llvmOptimize/LLVMOptimizer.h"
 
 void LLVMOptimizer::optimize(llvm::Module* module) {
 	// Create the analysis managers.

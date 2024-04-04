@@ -1,4 +1,3 @@
-// LLVMOptimizer.h
 #ifndef LLVM_OPTIMIZER_H
 #define LLVM_OPTIMIZER_H
 

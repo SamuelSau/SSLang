@@ -15,6 +15,7 @@
 #include "../include/semanticAnalyzer/SemanticAnalyzer.h"
 #include "../include/llvmGen/LLVMCodeGen.h"
 #include "llvmOptimize/LLVMOptimizer.h"
+#include "generateMachineCode/genObjFile.h"
 
 
 static void runTestForFile(const std::string& filePath) {
@@ -43,13 +44,13 @@ static void runTestForFile(const std::string& filePath) {
         std::cout << "LLVMCodeGen object created successfully\n";
         program->accept(&llvmCodeGen);
         std::cout << "Visited program for llvm codegen successfully\n";
-
+        
         llvm::Module* module = llvmCodeGen.getModule();
         if (module) {
 
             // Optimize the generated LLVM IR
             LLVMOptimizer::optimize(module);
-
+            
             std::error_code EC;
             std::string outputFilename = "llvmGenerated/" + filename; // Adjust the output directory as needed
             llvm::raw_fd_ostream dest(outputFilename, EC);
@@ -61,10 +62,16 @@ static void runTestForFile(const std::string& filePath) {
 
             module->print(dest, nullptr);
             std::cout << "LLVM IR was written to " << outputFilename << std::endl;
+
+            std::string objFilename = "genObjectFile/" + testPath.filename().replace_extension(".o").string();
+            
+            GenerateOBJ::generateObjectFile(module, objFilename);
         }
+
         else {
-            std::cerr << "Module is null. No IR generated." << std::endl;
+            std::cerr << "Module is null. No IR generated or no object file created." << std::endl;
         }
+
     }
     catch (const std::exception& e) {
         std::cerr << "\033[31mTest Failed\033[0m" << " in " << filename << " with error: " << e.what() << std::endl;

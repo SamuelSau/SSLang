@@ -52,10 +52,10 @@ if (APPLE)
   link_libraries("$<$<PLATFORM_ID:Darwin>:-undefined dynamic_lookup>")
 endif()
 
-llvm_map_components_to_libnames(llvmLibs Core Passes Support)
+llvm_map_components_to_libnames(llvmLibs Core Passes Support irreader mcjit nativecodegen X86AsmParser X86CodeGen X86Desc X86Info)
 
 # Main Executable
-add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp src/llvmGen/LLVMCodeGen.cpp src/llvmGen/LLVMUtility.cpp src/llvmOptimize/LLVMOptimizer.cpp) 
+add_executable(SSLang src/main.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp src/llvmGen/LLVMCodeGen.cpp src/llvmGen/LLVMUtility.cpp src/llvmOptimize/LLVMOptimizer.cpp src/generateMachineCode/genObjFile.cpp) 
 
 # Test Executables
 add_executable(SSLangDeclareTests tests/declaration_testing/declaration_test_runner.cpp src/lexer/Lexer.cpp src/parser/Parser.cpp src/ast/AST.cpp src/symbolTable/SymbolTable.cpp src/semanticAnalyzer/SemanticAnalyzer.cpp)

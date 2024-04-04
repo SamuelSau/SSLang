@@ -50,7 +50,6 @@ private:
     llvm::Function* currentFunction = nullptr;
     llvm::Value* lastValue = nullptr;
 
-
     std::unordered_map<std::string, llvm::Value*> currentLocals; // Current function's local variables
     std::unordered_map<std::string, llvm::GlobalVariable*> globals; // Global variables
     
