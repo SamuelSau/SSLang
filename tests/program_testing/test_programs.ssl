@@ -1,25 +1,27 @@
-flt q = 0.3;
+flt q = 1.9382023;
 bool isDeclared = false;
 int x = 2;
 int y = 3;
 int p = 7;
 int Q = 9;
 int z = 0;
-int t = 2;
+int t = 0;
 int bb = 100;
+int cc = 10000000;
 str informalGreeting = "sup";
 
 function returnValidNumber() -> int {
-    log(bb);
 	if (x equals 2){
-		loop range(2,3){
-		 log(t);
+		loop range(1,10000000){
+			t = t + 1;
+			log(t);
 		}
 		ret(Q);
 	}
 	else {
-		loop (x < 10){
-		   log(x);	
+		loop (x <= 10){
+		   log(x);
+		   x = x + 1;
 		}
 		ret(y);
 	}

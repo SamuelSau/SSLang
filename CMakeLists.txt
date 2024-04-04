@@ -41,8 +41,8 @@ endif()
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/src
-    #including llvm
     ${LLVM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include
+    ${LLD_INCLUDE_DIRS}
     )
 
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
@@ -80,7 +80,7 @@ else()
     target_compile_options(SSLangProgramTests PRIVATE -fexceptions)
 endif()
 
-target_link_libraries(SSLang PRIVATE ${llvmLibs})
+target_link_libraries(SSLang PRIVATE ${llvmLibs} ${LLD_LIBS})
 
 # Custom target for running tests
 

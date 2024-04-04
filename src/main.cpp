@@ -31,11 +31,14 @@ static void runTestForFile(const std::string& filePath) {
     Parser parser(lexer);
     std::filesystem::path testPath = filePath;
     std::string filename = testPath.filename().replace_extension(".ll").string(); // Change extension to .ll
+    std::string unoptimizedFilename = "llvmGenerated/unoptimized_" + testPath.filename().replace_extension(".ll").string();
+    std::string optimizedFilename = "llvmGenerated/optimized_" + testPath.filename().replace_extension(".ll").string();
 
     try {
         auto program = parser.parseProgram(); 
         std::cout << "Parsed program successfully\n";
         SymbolTable symbolTable;
+        std::cout << "Created symbol table\n";
         SemanticAnalyzer semanticAnalyzer(symbolTable);
         std::cout << "Visiting program for semantic analysis\n";
         semanticAnalyzer.visit(program.get());
@@ -48,28 +51,42 @@ static void runTestForFile(const std::string& filePath) {
         llvm::Module* module = llvmCodeGen.getModule();
         if (module) {
 
-            // Optimize the generated LLVM IR
-            LLVMOptimizer::optimize(module);
-            
-            std::error_code EC;
-            std::string outputFilename = "llvmGenerated/" + filename; // Adjust the output directory as needed
-            llvm::raw_fd_ostream dest(outputFilename, EC);
+            {
+                std::error_code EC;
+                llvm::raw_fd_ostream dest(unoptimizedFilename, EC);
 
-            if (EC) {
-                std::cerr << "Could not open file: " << EC.message() << ", for writing the LLVM IR to " << outputFilename << std::endl;
-                return;
+                if (EC) {
+                    std::cerr << "Could not open file: " << EC.message() << ", for writing the LLVM IR to " << unoptimizedFilename << std::endl;
+                    return;
+                }
+
+                module->print(dest, nullptr);
+                std::cout << "LLVM IR was written to " << unoptimizedFilename << std::endl;
+                std::string unoptimizedObjFilename = "genObjectFile/unoptimized_" + testPath.filename().replace_extension(".o").string();
+                GenerateOBJ::generateObjectFile(module, unoptimizedObjFilename);
             }
 
-            module->print(dest, nullptr);
-            std::cout << "LLVM IR was written to " << outputFilename << std::endl;
-
-            std::string objFilename = "genObjectFile/" + testPath.filename().replace_extension(".o").string();
+            LLVMOptimizer::optimize(module);
             
-            GenerateOBJ::generateObjectFile(module, objFilename);
+            {
+                std::error_code EC;
+                llvm::raw_fd_ostream dest(optimizedFilename, EC);
+
+                if (EC) {
+                    std::cerr << "Could not open file: " << EC.message() << ", for writing the LLVM IR to " << optimizedFilename << std::endl;
+                    return;
+                }
+
+                module->print(dest, nullptr);
+                std::cout << "LLVM IR was written to " << optimizedFilename << std::endl;
+                std::string optimizedObjFileName = "genObjectFile/optimized_" + testPath.filename().replace_extension(".o").string();
+                GenerateOBJ::generateObjectFile(module, optimizedObjFileName);
+            }
+            //assume you have another compiler installed like clang to generate the executable
         }
 
         else {
-            std::cerr << "Module is null. No IR generated or no object file created." << std::endl;
+            std::cerr << "Module is null. No IR generated, no optimization, or no object file created." << std::endl;
         }
 
     }

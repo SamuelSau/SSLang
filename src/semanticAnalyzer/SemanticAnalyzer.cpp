@@ -95,8 +95,8 @@ void SemanticAnalyzer::visit(const PrintStatement* stmt) {
     std::cout << "We are visiting the print statement" << std::endl;
     //std::cout << "Expression type: " << exprType << std::endl;
 
-    if (exprType != "int" && exprType != "float" && exprType != "string") {
-       throw std::runtime_error("Print statement only supports int, float, and string types.");
+    if (exprType != "int" && exprType != "float" && exprType != "string" && exprType != "bool") {
+       throw std::runtime_error("Print statement only supports int, float, string, and bool types");
     }
 }
 

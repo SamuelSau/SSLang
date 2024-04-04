@@ -2,6 +2,7 @@
 #include "llvmGen/LLVMUtility.h"
 #include "symbolTable/SymbolTable.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/IR/Type.h"
 
 LLVMCodeGen::LLVMCodeGen()
 	: module(new llvm::Module("MyModule", context)), builder(context) {
@@ -54,6 +55,15 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 else if (auto globalVar = llvm::dyn_cast<llvm::GlobalVariable>(ptr)) {
 		 if (!globalVar) {
 			 std::cerr << "Expected a GlobalVariable for global variable: " << expr->name << std::endl;
+			 return;
+		 }
+		 // Check if the global variable is a string (i.e., an array of i8)
+		 if (globalVar->getValueType()->isArrayTy() &&
+			 globalVar->getValueType()->getArrayElementType()->isIntegerTy(8)) {
+			 // For global strings, we don't load the value; we use the pointer directly.
+			 // This is a simplification. In real code, consider more robust checks and logic.
+			 lastValue = globalVar;
+			 std::cout << "Using global string variable directly: " << expr->name << std::endl;
 		 }
 		 type = globalVar->getValueType();
 	 }
@@ -201,18 +211,21 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
  void LLVMCodeGen::visit(const StringDeclaration* decl) {
 	 if (currentFunction) {
-		 auto& context = builder.getContext();
-		 llvm::Type* charType = llvm::Type::getInt8Ty(context);
-		 auto strValue = builder.CreateGlobalStringPtr(decl->value, "globalStr");
-		 llvm::ArrayType* strType = llvm::ArrayType::get(charType, decl->value.size() + 1); // +1 for null terminator
-		 auto alloca = builder.CreateAlloca(strType, nullptr, decl->name);
-		 builder.CreateStore(strValue, alloca);
-		 
-		 currentLocals[decl->name] = alloca;
+		 //auto& context = builder.getContext();
+		 //llvm::Type* charType = llvm::Type::getInt8Ty(context);
+		 //auto strValue = builder.CreateGlobalStringPtr(decl->value, "globalStr");
+		 //llvm::ArrayType* strType = llvm::ArrayType::get(charType, decl->value.size() + 1); // +1 for null terminator
+		 //auto alloca = builder.CreateAlloca(strType, nullptr, decl->name);
+		 //builder.CreateStore(strValue, alloca);
+		 //
+		 //currentLocals[decl->name] = alloca;
 	 }
 
 	 else {
+		 std::cout << "String declared globally" << std::endl;
 		 auto& context = builder.getContext();
+
+
 		 llvm::Constant* strConstant = llvm::ConstantDataArray::getString(context, decl->value, true);
 		 llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
 			 *module,
@@ -224,10 +237,15 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 );
 		 gVar->setAlignment(llvm::MaybeAlign(1));
 
-		 // If you need a pointer to the first element of this array for some reason:
-		 auto zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), 0);
-		 std::vector<llvm::Constant*> indices = { zero, zero };
-		 llvm::Constant* strPtr = llvm::ConstantExpr::getGetElementPtr(strConstant->getType(), gVar, indices);
+		 ////If you need a pointer to the first element of this array for some reason:
+		 //auto zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), 0);
+		 //std::vector<llvm::Constant*> indices = { zero, zero };
+		 //llvm::Constant* strPtr = llvm::ConstantExpr::getGetElementPtr(strConstant->getType(), gVar, indices);
+		 //std::cout << "This is the decl->name: " << decl->name << "\n";
+		 //
+		 //globalStringPointers[decl->name] = strPtr;		 
+		 globals[decl->name] = gVar;
+
 	 }
  }
 
@@ -409,14 +427,13 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
  void LLVMCodeGen::visit(const PrintStatement* stmt) {
 	 
-
 	 std::cout << "Visiting print statement in LLVMCodeGen" << std::endl;
 
 	 llvm::Function* printfFunc = module->getFunction("printf");
 	 if (!printfFunc) {
 		 llvm::FunctionType* printfType = llvm::FunctionType::get(
 			 llvm::IntegerType::getInt32Ty(context),
-			 llvm::PointerType::get(llvm::Type::getInt8Ty(context), 0),
+			 llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(context)),
 			 true); // Indicates a variadic function
 		 printfFunc = llvm::Function::Create(
 			 printfType,
@@ -441,11 +458,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
 	 std::cout << "Created format string for print statement" << std::endl;
 	 
-	 llvm::Value* argForPrintf = valueToPrint;
 
-	 std::cout << "Created argForPrintf for print statement" << std::endl;
-
-	 // Dynamically determine the type of valueToPrint to decide on the format string
 	 if (valueToPrint->getType()->isIntegerTy(32)) {
 		 // Integer
 		 std::cout << "Integer value to print" << std::endl;
@@ -456,51 +469,33 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 std::cout << "Float value to print" << std::endl;
 		 formatStr = builder.CreateGlobalStringPtr("%f\n", "printedFloatInt");
 	 }
-	 else if (valueToPrint->getType()->isPointerTy() && valueToPrint->getType()->getArrayElementType()->isIntegerTy(8)) {
-		 // String (char*)
-		 std::cout << "String value to print" << std::endl;
-		 formatStr = builder.CreateGlobalStringPtr("%s\n", "printFormatString");
-		 // For strings, we directly use valueToPrint as the second argument to printf
+	 else if (valueToPrint->getType()->getArrayElementType()->isIntegerTy(8)) {
+		 // Check if the pointer points to an i8 type, common for strings
 		
+		std::cout << "String value to print" << std::endl;
+		formatStr = builder.CreateGlobalStringPtr("%s\n", "formatStr");
+	 }
+
+	 else if (valueToPrint->getType()->isIntegerTy(1)) {
+		 // Boolean
+		 std::cout << "Boolean value to print" << std::endl;
+		 formatStr = builder.CreateGlobalStringPtr("%s\n", "printedFormatBool");
+		 // Convert the boolean to a string for printing
+		 llvm::Value* trueStr = builder.CreateGlobalStringPtr("true", "trueStr");
+		 llvm::Value* falseStr = builder.CreateGlobalStringPtr("false", "falseStr");
+		 valueToPrint = builder.CreateSelect(valueToPrint, trueStr, falseStr);
 	 }
 	 else {
 		 std::cerr << "Unsupported type for print statement" << std::endl;
+		 valueToPrint->getType()->print(llvm::errs());
+		 llvm::errs() << "\n"; // Print the type to standard error
 		 return;
 	 }
 
-	 // For integers and floats, generate the call to printf
-	 if (formatStr) {
-		 std::cout << "Creating call to printf" << std::endl;
-		 
-		 llvm::Value* argForPrintf = valueToPrint; // Default to using the original value
+	 std::vector<llvm::Value*> printfArgs = { formatStr, valueToPrint};
+	 // Create the call to printf
+	 builder.CreateCall(printfFunc, printfArgs);
 
-		 if (valueToPrint->getType()->isIntegerTy(32)) {
-			 // Integer
-			 formatStr = builder.CreateGlobalStringPtr("%d\n", "printFormatInt");
-		 }
-		 else if (valueToPrint->getType()->isFloatTy()) {
-			 // Float: Needs conversion to double for printf
-			 formatStr = builder.CreateGlobalStringPtr("%f\n", "printFormatFloat");
-			 argForPrintf = builder.CreateFPExt(valueToPrint, llvm::Type::getDoubleTy(context), "floatToDouble");
-		 }
-		 else if (valueToPrint->getType()->isDoubleTy()) {
-			 // Double
-			 formatStr = builder.CreateGlobalStringPtr("%f\n", "printFormatDouble");
-		 }
-		 else if (valueToPrint->getType()->isPointerTy() && valueToPrint->getType()->isIntegerTy(8)) {
-			 // String (char*)
-			 formatStr = builder.CreateGlobalStringPtr("%s\n", "printFormatString");
-		 }
-		 else {
-			 std::cerr << "Unsupported type for print statement.\n";
-			 return;
-		 }
-
-		 std::vector<llvm::Value*> printfArgs = { formatStr, argForPrintf };
-		 // Create the call to printf
-		 builder.CreateCall(printfFunc, printfArgs);
-
-	 }
 	 std::cout << "Finished print statement" << std::endl;
  }
 
@@ -661,7 +656,9 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 }
 	 else if (std::regex_match(expr->name, stringRegex)) {
 		 // Strings are a bit more complex due to their global nature
-		 lastValue = builder.CreateGlobalStringPtr(expr->name.substr(1, expr->name.length() - 2), expr->name + ".str");
+		 std::cout << "Primary expression is string: " << expr->name << std::endl;
+		 std::string strLiteral = expr->name.substr(1, expr->name.length() - 2); // Remove quotes
+		 lastValue = builder.CreateGlobalStringPtr(strLiteral, "strLiteral");
 		 return;
 	 }
 	 else {
@@ -675,7 +672,16 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			 std::cout << "Finished tryLoadAndDebug\n";
 			 return;
 		 }
-		 //
+
+		 //auto globalStringPtrIt = globalStringPointers.find(expr->name);
+		 //if (globalStringPtrIt != globalStringPointers.end()) {
+			// std::cout << "Found variable: " << expr->name << " in globalStringPointers" << std::endl;
+			// // Directly use the pointer to the first element for operations requiring a string.
+			// lastValue = globalStringPtrIt->second;
+			// std::cout << "Using pointer to first element of global string: " << expr->name << std::endl;
+			// return;
+		 //}
+		 
 		 // If not found locally, try to find it in global variables
 		 auto globalIt = globals.find(expr->name);
 		 if (globalIt != globals.end()) {
@@ -748,9 +754,9 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 else if (param.type == "bool") {
 			 type = llvm::Type::getInt1Ty(context);
 		 }
-		 //else if (param.type == "string") { // not sure if this is correct
-			// type = llvm::Type::getInt8PtrTy(context);
-		 //}
+		 else if (param.type == "string") {
+			 type = llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(context));
+		 }
 		 else if (param.type == "void") {
 			 type = llvm::Type::getVoidTy(context);
 		 }
@@ -775,9 +781,9 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 else if (funcDef->returnType == "bool") {
 		 returnType = llvm::Type::getInt1Ty(context);
 	 }
-	 //else if (funcDef->returnType == "string") { // not sure if this is correct
-		// returnType = llvm::Type::getInt8PtrTy(context);
-	 //}
+	 else if (funcDef->returnType == "string") { 
+		 returnType = llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(context));
+	 }
 	 else if (funcDef->returnType == "void") {
 		 returnType = llvm::Type::getVoidTy(context);
 	 }

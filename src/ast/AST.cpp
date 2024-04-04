@@ -220,6 +220,12 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
         return expr;
     }
 
+    else if (currentToken.is(Token::Kind::StringLiteral)) {
+		auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
+		consume(Token::Kind::StringLiteral, "Expected string literal.");
+		return expr;
+	}
+
     else if (currentToken.is_one_of(Token::Kind::True, Token::Kind::False)){
         auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
         consume(currentToken.kind(), "Expected boolean value.");
@@ -301,8 +307,6 @@ std::unique_ptr<Statement> Parser::parsePrintStatement() {
         
         if (currentToken.is(Token::Kind::Comma) || currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash)) {
            throw std::runtime_error("Only expected 1 expression to log.");
-
-
         }
 
         consume(Token::Kind::RightParen, "Expected ')' after logging expression.");

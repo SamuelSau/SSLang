@@ -52,7 +52,8 @@ private:
 
     std::unordered_map<std::string, llvm::Value*> currentLocals; // Current function's local variables
     std::unordered_map<std::string, llvm::GlobalVariable*> globals; // Global variables
-    
+    std::unordered_map<std::string, llvm::Constant*> globalStringPointers;
+
     std::vector<std::string> functionCalls;
 
     // Add any additional state needed for code generation

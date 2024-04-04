@@ -57,5 +57,4 @@ void GenerateOBJ::generateObjectFile(llvm::Module* module, const std::string& ou
     pass.run(*module);
     dest.flush();
     std::cout << "Object file generated: " << objPath << std::endl;
-
 }
