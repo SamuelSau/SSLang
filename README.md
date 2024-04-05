@@ -37,7 +37,7 @@ This will compile your SSLang source file to LLVM IR, ready for further compilat
 
 ## Documentation
 
-For more detailed information on SSLang's syntax and features, refer to the [Documentation](docs/) directory.
+For more detailed information on SSLang's syntax and features, refer to the [Documentation](https://github.com/SamuelSau/SSLang/blob/main/Documentation.md) directory.
 
 ## License
 
