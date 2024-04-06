@@ -210,14 +210,14 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
  void LLVMCodeGen::visit(const StringDeclaration* decl) {
 	 if (currentFunction) {
-		 //auto& context = builder.getContext();
-		 //llvm::Type* charType = llvm::Type::getInt8Ty(context);
-		 //auto strValue = builder.CreateGlobalStringPtr(decl->value, "globalStr");
-		 //llvm::ArrayType* strType = llvm::ArrayType::get(charType, decl->value.size() + 1); // +1 for null terminator
-		 //auto alloca = builder.CreateAlloca(strType, nullptr, decl->name);
-		 //builder.CreateStore(strValue, alloca);
-		 //
-		 //currentLocals[decl->name] = alloca;
+		 auto& context = builder.getContext();
+		 llvm::Type* charType = llvm::Type::getInt8Ty(context);
+		 auto strValue = builder.CreateGlobalStringPtr(decl->value, "globalStr");
+		 llvm::ArrayType* strType = llvm::ArrayType::get(charType, decl->value.size() + 1); // +1 for null terminator
+		 auto alloca = builder.CreateAlloca(strType, nullptr, decl->name);
+		 builder.CreateStore(strValue, alloca);
+		 
+		 currentLocals[decl->name] = alloca;
 	 }
 
 	 else {
@@ -234,15 +234,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			 strConstant,
 			 decl->name
 		 );
-		 gVar->setAlignment(llvm::MaybeAlign(1));
-
-		 ////If you need a pointer to the first element of this array for some reason:
-		 //auto zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), 0);
-		 //std::vector<llvm::Constant*> indices = { zero, zero };
-		 //llvm::Constant* strPtr = llvm::ConstantExpr::getGetElementPtr(strConstant->getType(), gVar, indices);
-		 //std::cout << "This is the decl->name: " << decl->name << "\n";
-		 //
-		 //globalStringPointers[decl->name] = strPtr;		 
+		 gVar->setAlignment(llvm::MaybeAlign(1));		 
 		 globals[decl->name] = gVar;
 
 	 }
@@ -465,7 +457,14 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 else if (valueToPrint->getType()->isFloatTy()) {
 		 // Float
 		 std::cout << "Float value to print" << std::endl;
+		 llvm::Value* castedValueToPrint = valueToPrint;
 		 formatStr = builder.CreateGlobalStringPtr("%f\n", "printedFloatInt");
+		 castedValueToPrint = builder.CreateFPExt(valueToPrint, llvm::Type::getDoubleTy(context), "floatToDouble");
+
+		 std::vector<llvm::Value*> printfArgs = { formatStr, castedValueToPrint };
+		 builder.CreateCall(printfFunc, printfArgs);
+		 std::cout << "Finished float print statement" << std::endl;
+		 return;
 	 }
 
 	 else if (valueToPrint->getType()->isIntegerTy(1)) { //boolean
@@ -765,7 +764,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			 std::cout << "String parameter\n";
 			 type = llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(context));
 		 }
-		 else if (param.type == "void") {
+		 else if (param.type == "void") { 
 			 type = llvm::Type::getVoidTy(context);
 		 }
 		 // Add more type mappings as necessary
@@ -788,12 +787,13 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 returnType = llvm::Type::getInt32Ty(context);
 	 }
 	 else if (funcDef->returnType == "flt") {
+		 std::cout << "Function return type is float\n";
 		 returnType = llvm::Type::getFloatTy(context);
 	 }
 	 else if (funcDef->returnType == "bool") {
 		 returnType = llvm::Type::getInt1Ty(context);
 	 }
-	 else if (funcDef->returnType == "str") {
+	 else if (funcDef->returnType == "str") { //return type for string not working atm
 		 std::cout << "String return type\n";
 		 returnType = llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(context));
 		 std::cout << "String return type set\n";
@@ -846,7 +846,6 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 }
 
 	 currentFunction = nullptr; // Clear the current function
-	 //currentLocals.clear();
 
 	 // Reset the builder's insert point
 	 builder.ClearInsertionPoint();
@@ -883,7 +882,6 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			llvm::Value* argValue = evaluateExpression(arg.get());
 			std::cout << "Evaluated an argument for function call\n";
 			if (!argValue) {
-				std::cout << "Argument evaluation failed for function call: " << call->name << std::endl;
 				std::cerr << "Argument evaluation failed for function call: " << call->name << std::endl;
 				return;
 			}

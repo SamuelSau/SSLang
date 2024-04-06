@@ -1,4 +1,5 @@
-flt q = 1.9382023;
+flt q = 12.9382023;
+flt r = 231231414.2;
 bool isDeclared = false;
 int x = 2;
 int y = 3;
@@ -11,21 +12,21 @@ int cc = 10000000;
 str informalGreeting = "sup";
 str formalGreeting = "hello";
 
-function returnValidString() -> str {
+function returnValidString() -> flt {
 	if (x equals 2){
 		loop range(1,2){
 			t = t + 1;
 			log(isDeclared);
-			log(informalGreeting);
+			log(q);
 		}
-		ret(informalGreeting);
+		ret(r);
 	}
 	else {
 		loop (x <= 10){
 		   log(x);
 		   x = x + 1;
 		}
-		ret(formalGreeting);
+		ret(r);
 	}
 }
 call returnValidString();

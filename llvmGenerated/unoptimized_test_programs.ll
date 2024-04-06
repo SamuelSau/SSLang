@@ -1,7 +1,8 @@
 ; ModuleID = 'MyModule'
 source_filename = "MyModule"
 
-@q = global float 0x3FFF02E060000000, align 4
+@q = global float 0x4029E05C00000000, align 4
+@r = global float 0x41AB909F60000000, align 4
 @isDeclared = global i1 false, align 1
 @x = global i32 2, align 4
 @y = global i32 3, align 4
@@ -16,10 +17,10 @@ source_filename = "MyModule"
 @printedFormatBool = private unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
 @trueStr = private unnamed_addr constant [5 x i8] c"true\00", align 1
 @falseStr = private unnamed_addr constant [6 x i8] c"false\00", align 1
-@printedFormatString = private unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
+@printedFloatInt = private unnamed_addr constant [4 x i8] c"%f\0A\00", align 1
 @printedFormatInt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
-define ptr @returnValidString() {
+define float @returnValidString() {
 entry:
   %loopVar = alloca i32, align 4
   %x = load i32, ptr @x, align 4
@@ -45,14 +46,16 @@ forBody:                                          ; preds = %forCond
   %isDeclared = load i1, ptr @isDeclared, align 1
   %0 = select i1 %isDeclared, ptr @trueStr, ptr @falseStr
   %1 = call i32 (ptr, ...) @printf(ptr @printedFormatBool, ptr %0)
-  %2 = call i32 (ptr, ...) @printf(ptr @printedFormatString, ptr @informalGreeting)
-  %3 = call i32 (ptr, ...) @printf(ptr @printedFormatString, ptr @informalGreeting)
+  %q = load float, ptr @q, align 4
+  %floatToDouble = fpext float %q to double
+  %2 = call i32 (ptr, ...) @printf(ptr @printedFloatInt, double %floatToDouble)
   %nextVar = add i32 %loopVar1, 1
   store i32 %nextVar, ptr %loopVar, align 4
   br label %forCond
 
 forEnd:                                           ; preds = %forCond
-  ret ptr @informalGreeting
+  %r = load float, ptr @r, align 4
+  ret float %r
 
 whileCond:                                        ; preds = %whileBody, %else
   %x2 = load i32, ptr @x, align 4
@@ -61,20 +64,21 @@ whileCond:                                        ; preds = %whileBody, %else
 
 whileBody:                                        ; preds = %whileCond
   %x4 = load i32, ptr @x, align 4
-  %4 = call i32 (ptr, ...) @printf(ptr @printedFormatInt, i32 %x4)
+  %3 = call i32 (ptr, ...) @printf(ptr @printedFormatInt, i32 %x4)
   %x5 = load i32, ptr @x, align 4
   %addtmp6 = add i32 %x5, 1
   store i32 %addtmp6, ptr @x, align 4
   br label %whileCond
 
 whileExit:                                        ; preds = %whileCond
-  ret ptr @formalGreeting
+  %r7 = load float, ptr @r, align 4
+  ret float %r7
 }
 
 declare i32 @printf(ptr, ...)
 
 define i32 @main() {
 entry:
-  %0 = call ptr @returnValidString()
+  %0 = call float @returnValidString()
   ret i32 0
 }
