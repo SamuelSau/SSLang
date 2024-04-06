@@ -9,21 +9,23 @@ int t = 0;
 int bb = 100;
 int cc = 10000000;
 str informalGreeting = "sup";
+str formalGreeting = "hello";
 
-function returnValidNumber() -> int {
+function returnValidString() -> str {
 	if (x equals 2){
-		loop range(1,10000000){
+		loop range(1,2){
 			t = t + 1;
-			log(t);
+			log(isDeclared);
+			log(informalGreeting);
 		}
-		ret(Q);
+		ret(informalGreeting);
 	}
 	else {
 		loop (x <= 10){
 		   log(x);
 		   x = x + 1;
 		}
-		ret(y);
+		ret(formalGreeting);
 	}
 }
-call returnValidNumber();
+call returnValidString();

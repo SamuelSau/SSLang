@@ -13,42 +13,46 @@ target triple = "x86_64-pc-windows-msvc"
 @t = local_unnamed_addr global i32 0, align 4
 @bb = local_unnamed_addr global i32 100, align 4
 @cc = local_unnamed_addr global i32 10000000, align 4
-@printedFormatInt.1 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@informalGreeting = private constant [4 x i8] c"sup\00", align 1
+@formalGreeting = private constant [6 x i8] c"hello\00", align 1
+@trueStr = private unnamed_addr constant [5 x i8] c"true\00", align 1
+@falseStr = private unnamed_addr constant [6 x i8] c"false\00", align 1
+@printedFormatInt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
 ; Function Attrs: nofree nounwind
-define i32 @returnValidNumber() local_unnamed_addr #0 {
+define noundef nonnull ptr @returnValidString() local_unnamed_addr #0 {
 entry:
   %x = load i32, ptr @x, align 4
   %cmptmp = icmp eq i32 %x, 2
   br i1 %cmptmp, label %forBody, label %whileCond.preheader
 
 whileCond.preheader:                              ; preds = %entry
-  %cmptmp49 = icmp slt i32 %x, 11
-  br i1 %cmptmp49, label %whileBody, label %common.ret
+  %cmptmp39 = icmp slt i32 %x, 11
+  br i1 %cmptmp39, label %whileBody, label %common.ret
 
-forBody:                                          ; preds = %entry, %forBody
-  %loopVar.011 = phi i32 [ %nextVar, %forBody ], [ 1, %entry ]
+forBody:                                          ; preds = %entry
   %t = load i32, ptr @t, align 4
   %addtmp = add i32 %t, 1
   store i32 %addtmp, ptr @t, align 4
-  %0 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFormatInt.1, i32 %addtmp)
-  %nextVar = add nuw nsw i32 %loopVar.011, 1
-  %exitcond.not = icmp eq i32 %nextVar, 10000000
-  br i1 %exitcond.not, label %common.ret, label %forBody
+  %isDeclared = load i1, ptr @isDeclared, align 1
+  %0 = select i1 %isDeclared, ptr @trueStr, ptr @falseStr
+  %puts = tail call i32 @puts(ptr nonnull dereferenceable(1) %0)
+  %puts7 = tail call i32 @puts(ptr nonnull dereferenceable(1) @informalGreeting)
+  %puts8 = tail call i32 @puts(ptr nonnull dereferenceable(1) @informalGreeting)
+  br label %common.ret
 
-common.ret:                                       ; preds = %whileBody, %forBody, %whileCond.preheader
-  %common.ret.op.in = phi ptr [ @y, %whileCond.preheader ], [ @Q, %forBody ], [ @y, %whileBody ]
-  %common.ret.op = load i32, ptr %common.ret.op.in, align 4
-  ret i32 %common.ret.op
+common.ret:                                       ; preds = %whileBody, %whileCond.preheader, %forBody
+  %common.ret.op = phi ptr [ @informalGreeting, %forBody ], [ @formalGreeting, %whileCond.preheader ], [ @formalGreeting, %whileBody ]
+  ret ptr %common.ret.op
 
 whileBody:                                        ; preds = %whileCond.preheader, %whileBody
-  %x310 = phi i32 [ %addtmp7, %whileBody ], [ %x, %whileCond.preheader ]
-  %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFormatInt.1, i32 %x310)
-  %x6 = load i32, ptr @x, align 4
-  %addtmp7 = add i32 %x6, 1
-  store i32 %addtmp7, ptr @x, align 4
-  %cmptmp4 = icmp slt i32 %addtmp7, 11
-  br i1 %cmptmp4, label %whileBody, label %common.ret
+  %x210 = phi i32 [ %addtmp6, %whileBody ], [ %x, %whileCond.preheader ]
+  %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFormatInt, i32 %x210)
+  %x5 = load i32, ptr @x, align 4
+  %addtmp6 = add i32 %x5, 1
+  store i32 %addtmp6, ptr @x, align 4
+  %cmptmp3 = icmp slt i32 %addtmp6, 11
+  br i1 %cmptmp3, label %whileBody, label %common.ret
 }
 
 ; Function Attrs: nofree nounwind
@@ -62,30 +66,34 @@ entry:
   br i1 %cmptmp.i, label %forBody.i, label %whileCond.preheader.i
 
 whileCond.preheader.i:                            ; preds = %entry
-  %cmptmp49.i = icmp slt i32 %x.i, 11
-  br i1 %cmptmp49.i, label %whileBody.i, label %returnValidNumber.exit
+  %cmptmp39.i = icmp slt i32 %x.i, 11
+  br i1 %cmptmp39.i, label %whileBody.i, label %returnValidString.exit
 
-forBody.i:                                        ; preds = %entry, %forBody.i
-  %loopVar.011.i = phi i32 [ %nextVar.i, %forBody.i ], [ 1, %entry ]
+forBody.i:                                        ; preds = %entry
   %t.i = load i32, ptr @t, align 4
   %addtmp.i = add i32 %t.i, 1
   store i32 %addtmp.i, ptr @t, align 4
-  %0 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFormatInt.1, i32 %addtmp.i)
-  %nextVar.i = add nuw nsw i32 %loopVar.011.i, 1
-  %exitcond.not.i = icmp eq i32 %nextVar.i, 10000000
-  br i1 %exitcond.not.i, label %returnValidNumber.exit, label %forBody.i
+  %isDeclared.i = load i1, ptr @isDeclared, align 1
+  %0 = select i1 %isDeclared.i, ptr @trueStr, ptr @falseStr
+  %puts.i = tail call i32 @puts(ptr nonnull dereferenceable(1) %0)
+  %puts7.i = tail call i32 @puts(ptr nonnull dereferenceable(1) @informalGreeting)
+  %puts8.i = tail call i32 @puts(ptr nonnull dereferenceable(1) @informalGreeting)
+  br label %returnValidString.exit
 
 whileBody.i:                                      ; preds = %whileCond.preheader.i, %whileBody.i
-  %x310.i = phi i32 [ %addtmp7.i, %whileBody.i ], [ %x.i, %whileCond.preheader.i ]
-  %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFormatInt.1, i32 %x310.i)
-  %x6.i = load i32, ptr @x, align 4
-  %addtmp7.i = add i32 %x6.i, 1
-  store i32 %addtmp7.i, ptr @x, align 4
-  %cmptmp4.i = icmp slt i32 %addtmp7.i, 11
-  br i1 %cmptmp4.i, label %whileBody.i, label %returnValidNumber.exit
+  %x210.i = phi i32 [ %addtmp6.i, %whileBody.i ], [ %x.i, %whileCond.preheader.i ]
+  %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFormatInt, i32 %x210.i)
+  %x5.i = load i32, ptr @x, align 4
+  %addtmp6.i = add i32 %x5.i, 1
+  store i32 %addtmp6.i, ptr @x, align 4
+  %cmptmp3.i = icmp slt i32 %addtmp6.i, 11
+  br i1 %cmptmp3.i, label %whileBody.i, label %returnValidString.exit
 
-returnValidNumber.exit:                           ; preds = %whileBody.i, %forBody.i, %whileCond.preheader.i
+returnValidString.exit:                           ; preds = %whileBody.i, %whileCond.preheader.i, %forBody.i
   ret i32 0
 }
+
+; Function Attrs: nofree nounwind
+declare noundef i32 @puts(ptr nocapture noundef readonly) local_unnamed_addr #0
 
 attributes #0 = { nofree nounwind }

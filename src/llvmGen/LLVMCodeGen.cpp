@@ -3,6 +3,7 @@
 #include "symbolTable/SymbolTable.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Type.h"
+#include "llvm/ADT/StringRef.h"
 
 LLVMCodeGen::LLVMCodeGen()
 	: module(new llvm::Module("MyModule", context)), builder(context) {
@@ -58,12 +59,10 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			 return;
 		 }
 		 // Check if the global variable is a string (i.e., an array of i8)
-		 if (globalVar->getValueType()->isArrayTy() &&
-			 globalVar->getValueType()->getArrayElementType()->isIntegerTy(8)) {
-			 // For global strings, we don't load the value; we use the pointer directly.
-			 // This is a simplification. In real code, consider more robust checks and logic.
+		 if (globalVar->getValueType()->isArrayTy() && globalVar->getValueType()->getArrayElementType()->isIntegerTy(8)) {
 			 lastValue = globalVar;
 			 std::cout << "Using global string variable directly: " << expr->name << std::endl;
+			 return;
 		 }
 		 type = globalVar->getValueType();
 	 }
@@ -456,8 +455,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
 	 llvm::Value* formatStr = nullptr;
 
-	 std::cout << "Created format string for print statement" << std::endl;
-	 
+	 std::cout << "Created format string for print statement" << std::endl; 
 
 	 if (valueToPrint->getType()->isIntegerTy(32)) {
 		 // Integer
@@ -469,14 +467,8 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 std::cout << "Float value to print" << std::endl;
 		 formatStr = builder.CreateGlobalStringPtr("%f\n", "printedFloatInt");
 	 }
-	 else if (valueToPrint->getType()->getArrayElementType()->isIntegerTy(8)) {
-		 // Check if the pointer points to an i8 type, common for strings
-		
-		std::cout << "String value to print" << std::endl;
-		formatStr = builder.CreateGlobalStringPtr("%s\n", "formatStr");
-	 }
 
-	 else if (valueToPrint->getType()->isIntegerTy(1)) {
+	 else if (valueToPrint->getType()->isIntegerTy(1)) { //boolean
 		 // Boolean
 		 std::cout << "Boolean value to print" << std::endl;
 		 formatStr = builder.CreateGlobalStringPtr("%s\n", "printedFormatBool");
@@ -486,14 +478,25 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 valueToPrint = builder.CreateSelect(valueToPrint, trueStr, falseStr);
 	 }
 	 else {
-		 std::cerr << "Unsupported type for print statement" << std::endl;
-		 valueToPrint->getType()->print(llvm::errs());
-		 llvm::errs() << "\n"; // Print the type to standard error
-		 return;
+		 llvm::GlobalVariable* gVar = llvm::dyn_cast<llvm::GlobalVariable>(valueToPrint);
+
+		 if (gVar) { //handling special cases for strings as they are global variables
+
+			 std::cout << "String value to print" << std::endl;
+			 formatStr = builder.CreateGlobalStringPtr("%s\n", "printedFormatString");
+			 std::vector<llvm::Value*> printfArgs = { formatStr, valueToPrint };
+			 builder.CreateCall(printfFunc, printfArgs);
+		 }
+
+		 else {
+			 std::cerr << "Unsupported type for print statement" << std::endl;
+			 valueToPrint->getType()->print(llvm::errs());
+			 llvm::errs() << "\n"; // Print the type to standard error
+			 return;
+		 }
 	 }
 
 	 std::vector<llvm::Value*> printfArgs = { formatStr, valueToPrint};
-	 // Create the call to printf
 	 builder.CreateCall(printfFunc, printfArgs);
 
 	 std::cout << "Finished print statement" << std::endl;
@@ -672,15 +675,6 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			 std::cout << "Finished tryLoadAndDebug\n";
 			 return;
 		 }
-
-		 //auto globalStringPtrIt = globalStringPointers.find(expr->name);
-		 //if (globalStringPtrIt != globalStringPointers.end()) {
-			// std::cout << "Found variable: " << expr->name << " in globalStringPointers" << std::endl;
-			// // Directly use the pointer to the first element for operations requiring a string.
-			// lastValue = globalStringPtrIt->second;
-			// std::cout << "Using pointer to first element of global string: " << expr->name << std::endl;
-			// return;
-		 //}
 		 
 		 // If not found locally, try to find it in global variables
 		 auto globalIt = globals.find(expr->name);
@@ -741,10 +735,23 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
 
  void LLVMCodeGen::visit(const FunctionDefinition* funcDef) {
+
+	 std::cout << "We are visiting a function definition\n";
+
 	 std::cout << funcDef->toString() << std::endl;
+
+	 std::cout << "Function name: " << funcDef->name << std::endl;
+
 	 std::vector<llvm::Type*> paramTypes;
+
+	 std::cout << "Size of parameters: " << funcDef->parameters.size() << "\n";
+
 	 for (const auto& param : funcDef->parameters) {
+
 		 llvm::Type* type = nullptr;
+		 
+		 std::cout << "Parameter name: " << param.name << "\n";
+
 		 if (param.type == "int") {
 			 type = llvm::Type::getInt32Ty(context);
 		 }
@@ -755,6 +762,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			 type = llvm::Type::getInt1Ty(context);
 		 }
 		 else if (param.type == "string") {
+			 std::cout << "String parameter\n";
 			 type = llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(context));
 		 }
 		 else if (param.type == "void") {
@@ -762,6 +770,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 }
 		 // Add more type mappings as necessary
 		 if (type) {
+			 std::cout << "There is a type\n";
 			 paramTypes.push_back(type);
 		 }
 		 else {
@@ -770,19 +779,24 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			 return; // Skip unsupported types
 		 }
 	 }
-
+	 std::cout << "last value for function definition: " << lastValue << std::endl;
 	 llvm::Type* returnType = nullptr;
+
+	 std::cout << "This is the function return type: " << funcDef->returnType << "\n";
+
 	 if (funcDef->returnType == "int") {
 		 returnType = llvm::Type::getInt32Ty(context);
 	 }
-	 else if (funcDef->returnType == "float") {
+	 else if (funcDef->returnType == "flt") {
 		 returnType = llvm::Type::getFloatTy(context);
 	 }
 	 else if (funcDef->returnType == "bool") {
 		 returnType = llvm::Type::getInt1Ty(context);
 	 }
-	 else if (funcDef->returnType == "string") { 
+	 else if (funcDef->returnType == "str") {
+		 std::cout << "String return type\n";
 		 returnType = llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(context));
+		 std::cout << "String return type set\n";
 	 }
 	 else if (funcDef->returnType == "void") {
 		 returnType = llvm::Type::getVoidTy(context);

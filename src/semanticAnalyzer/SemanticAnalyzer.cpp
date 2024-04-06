@@ -176,7 +176,22 @@ void SemanticAnalyzer::visit(const ReturnStatement* stmt) {
     if (!(exprType == "int" || exprType == "float" || exprType == "string" || exprType == "bool")) {
        throw std::runtime_error("Return statement only supports int, float, string, and bool types");
     }
+
+    if (currentFunctionReturnType == "str") {
+        currentFunctionReturnType = "string";
+    }
+    else if (currentFunctionReturnType == "flt") {
+		currentFunctionReturnType = "float";
+	}
+    else if (currentFunctionReturnType == "int") {
+		currentFunctionReturnType = "int";
+	}
+    else if (currentFunctionReturnType == "bool") {
+		currentFunctionReturnType = "bool";
+	}
+
     if (exprType != currentFunctionReturnType) {
+        std::cout << "currentFunctionReturnType: " << currentFunctionReturnType << " exprType: " << exprType << "\n";
        throw std::runtime_error("Return type does not match function return type.");
     }
 }
