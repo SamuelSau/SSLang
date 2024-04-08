@@ -19,21 +19,19 @@ To start using SSLang, you'll need to clone the repository and build the compile
 ```
 2. **Build the Compiler:**
 
-Ensure you have CMake and a C++17 compatible compiler installed. Then run:
+Ensure you have CMake and a C++17 compatible compiler installed. I used Ninja for my build system. Then run:
 ```
- mkdir build && cd build
- cmake ..
- cmake --build .
+ ninja
 ```
-3. **Run SSLang:**
+3. **Run Clang:**
 
-After building, you can start using the SSLang compiler with:
+After building, the LLVM IR will be generated in .ll files and .o files. There will be 2 files, optimized and unoptimized generated LLVM IR for testing purposes. To link the object files, you can use a compiler like Clang:
 
 ```
-./sslang <your-source-file>.ssl
+ clang unoptimized_test_programs.o -o unoptimized_test_programs.exe
 ```
 
-This will compile your SSLang source file to LLVM IR, ready for further compilation to your target architecture.
+This will compile your SSLang source file to an executable based on the target architecture. For now, it supports x86_64. 
 
 ## Documentation
 
