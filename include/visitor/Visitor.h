@@ -6,6 +6,7 @@ class IntDeclaration;
 class FloatDeclaration;
 class BoolDeclaration;
 class StringDeclaration;
+class ArrayDeclaration;
 class AssignmentExpression;
 class LogicOrExpression;
 class LogicAndExpression;
@@ -16,6 +17,7 @@ class FactorExpression;
 class PrimaryExpression;
 class BinaryExpression;
 class UnaryExpression;
+class MethodCall;
 class LoopStatement;
 class PrintStatement;
 class WhileLoopStatement;
@@ -35,11 +37,13 @@ public:
     virtual void visit(const FloatDeclaration* decl) = 0;
     virtual void visit(const StringDeclaration* decl) = 0;
     virtual void visit(const BoolDeclaration* decl) = 0;
+    virtual void visit(const ArrayDeclaration* decl) = 0;
 
     virtual void visit(const AssignmentExpression* expr) = 0;
     virtual void visit(const PrimaryExpression* expr) = 0;
     virtual void visit(const BinaryExpression* expr) = 0;   
     virtual void visit(const UnaryExpression* expr) = 0;
+    virtual void visit(const MethodCall* expr) = 0;
     
     virtual void visit(const PrintStatement* stmt) = 0;
     virtual void visit(const WhileLoopStatement* stmt) = 0;

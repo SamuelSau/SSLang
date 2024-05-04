@@ -13,11 +13,13 @@ public:
     void visit(const FloatDeclaration* decl);
     void visit(const StringDeclaration* decl);
     void visit(const BoolDeclaration* decl);
+    void visit(const ArrayDeclaration* decl);
 
     void visit(const BinaryExpression* expr);
     void visit(const PrimaryExpression* expr);
     void visit(const UnaryExpression* expr);
     void visit(const AssignmentExpression* expr);
+    void visit(const MethodCall* expr);
 
     void visit(const PrintStatement* stmt);
     void visit(const WhileLoopStatement* stmt);

@@ -33,6 +33,7 @@ public:
     std::unique_ptr<Declaration> parseFloatDeclaration(); //flt x = 5.0;
     std::unique_ptr<Declaration> parseStringDeclaration(); //str x = "hello";
     std::unique_ptr<Declaration> parseBoolDeclaration(); //bool x = true;
+    std::unique_ptr<Declaration> parseArrayDeclaration(); //int[] x = {1,2,3};
 
     // Expression parsing
     std::unique_ptr<Expression> parseExpression(); 
@@ -40,6 +41,7 @@ public:
     std::unique_ptr<Expression> parseBinary(); // x + y;
     std::unique_ptr<Expression> parseUnary(); //-x, not x;
     std::unique_ptr<Expression> parsePrimary(); //x;
+    std::unique_ptr<Expression> parseMethodCall(std::unique_ptr<Expression> object); //add(2,3);
 
     //Statement parsing
     std::unique_ptr<Statement> parseStatement();

@@ -92,6 +92,15 @@ Token Lexer::next() noexcept {
     case '#':
       return atom(Token::Kind::Hash);
     case '.':
+        get(); // Consume the '.'
+        if (std::strncmp(m_beg, "add(", 4) == 0) {
+            m_beg += 4; // Move past "add("
+            return Token(Token::Kind::ArrayAdd, token_start, m_beg);
+        }
+        else if (std::strncmp(m_beg, "remove(", 7) == 0) {
+            m_beg += 7; // Move past "remove()"
+            return Token(Token::Kind::ArrayRemove, token_start, m_beg);
+        }
       return atom(Token::Kind::Dot);
     case ',':
       return atom(Token::Kind::Comma);
@@ -151,8 +160,8 @@ Token Lexer::identifier() noexcept {
         {"print", Token::Kind::Print},
         {"call", Token::Kind::Call},
         {"true", Token::Kind::True},
-        {"false", Token::Kind::False}
-
+        {"false", Token::Kind::False},
+		{"ARRAY", Token::Kind::Array}
     };
 
     auto keyword = keywords.find(text);

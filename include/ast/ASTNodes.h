@@ -25,6 +25,7 @@ class Declaration : public ASTNode {
 class Expression : public ASTNode {
     public:
         virtual std::string getType(SymbolTable& symbolTable) const = 0;
+        virtual std::string getName() const { return ""; }
 };
 class Statement : public ASTNode {
     public:
@@ -135,6 +136,29 @@ class BoolDeclaration : public Declaration {
         }
 };
 
+class ArrayDeclaration : public Declaration {
+public:
+    std::string name;
+	std::vector<std::unique_ptr<Expression>> elements;
+    std::size_t size;
+
+    ArrayDeclaration(std::string name, std::vector<std::unique_ptr<Expression>> elements)
+        : name(std::move(name)), elements(std::move(elements)), size(this->elements.size()) {}
+
+    std::string toString() const override {
+		std::string result = "ArrayDeclaration(" + name + " = [";
+        for (const auto& elem : elements) {
+			result += elem->toString() + ", ";
+		}
+		result += "])";
+		return result;
+	}
+
+    void accept(IVisitor* visitor) const override {
+		visitor->visit(this);
+	}
+};
+
 
 //Expressions
 class AssignmentExpression : public Expression {
@@ -157,6 +181,10 @@ class AssignmentExpression : public Expression {
         }
         return symbolInfo->type;
         }
+
+        std::string getName() const override {
+			return name;
+		}
 
         void accept(IVisitor* visitor) const override {
             visitor->visit(this);
@@ -199,6 +227,7 @@ class PrimaryExpression : public Expression {
             }
             // If it's not a recognized literal, assume it's an identifier and check if declared
             else {
+                std::cout << "name of the primary expression is: " << name << "\n";
                 auto symbolInfo = symbolTable.getSymbolInfo(name);
                 if (!symbolInfo.has_value()) {
                    throw std::runtime_error("pE '" + name + "' not declared.");
@@ -206,6 +235,10 @@ class PrimaryExpression : public Expression {
                 std::cout << "Symbol type in primary expression is " << symbolInfo->type << " for: " << name << std::endl; // Print the type of the symbol
                 return symbolInfo->type;
             }
+        }
+
+        std::string getName() const override {
+            return name;
         }
 
         void accept(IVisitor* visitor) const override {
@@ -258,6 +291,10 @@ class BinaryExpression : public Expression {
             }
         }
 
+        std::string getName() const override {
+            return "binary";
+        }
+
         void accept(IVisitor* visitor) const override {
             visitor->visit(this);
         }
@@ -280,11 +317,52 @@ class UnaryExpression : public Expression {
             return exprType;
         }
 
+        std::string getName() const override {
+            return "unary";
+        }
+
         void accept(IVisitor* visitor) const override {
             visitor->visit(this);
         }
 };
 
+class MethodCall : public Expression {
+public:
+    std::unique_ptr<Expression> object;
+    std::string name;
+	std::vector<std::unique_ptr<Expression>> arguments;
+
+	MethodCall(std::unique_ptr<Expression> object, std::string name, std::vector<std::unique_ptr<Expression>> arguments)
+		: object(std::move(object)), name(std::move(name)), arguments(std::move(arguments)) {}
+
+    std::string toString() const override {
+        std::string result = "MethodCall on " + object->toString() + " -> " + name + "(";
+        for (const auto& arg : arguments) {
+            if (&arg != &arguments.front()) result += ", ";
+            result += arg->toString();
+        }
+        result += ")";
+        return result;
+    }
+
+    std::string getName() const override {
+		return name;
+	}
+
+    std::string getType(SymbolTable& symbolTable) const override {
+		// Check if the method is declared
+		auto symbolInfo = symbolTable.getSymbolInfo(name);
+        if (!symbolInfo.has_value()) {
+			throw std::runtime_error("Method " + name + " not declared.");
+		}
+		return symbolInfo->type;
+	}
+
+    void accept(IVisitor* visitor) const override {
+		visitor->visit(this);
+	}
+        
+};
 
 //Statements
 

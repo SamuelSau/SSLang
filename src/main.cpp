@@ -35,7 +35,8 @@ static void runTestForFile(const std::string& filePath) {
     std::string optimizedFilename = "llvmGenerated/optimized_" + testPath.filename().replace_extension(".ll").string();
 
     try {
-        auto program = parser.parseProgram(); 
+        auto program = parser.parseProgram();
+        std::cout << "Parsed program as " << program->toString() << std::endl;
         std::cout << "Parsed program successfully\n";
         SymbolTable symbolTable;
         std::cout << "Created symbol table\n";
@@ -91,7 +92,7 @@ static void runTestForFile(const std::string& filePath) {
 
     }
     catch (const std::exception& e) {
-        std::cerr << "\033[31mTest Failed\033[0m" << " in " << filename << " with error: " << e.what() << std::endl;
+        std::cerr << "\033[31mTest Failed\033[0m" << " with error: " << e.what() << std::endl;
     }
 }
 

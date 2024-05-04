@@ -11,22 +11,24 @@ int bb = 100;
 int cc = 10000000;
 str informalGreeting = "sup";
 str formalGreeting = "hello";
+int ARRAY numberList = {1,2,3,4,5,6,7,8,9,10};
 
-function returnValidString() -> flt {
+function returnValidString() -> int {
+    numberList.add(11); 
 	if (x equals 2){
 		loop range(1,2){
 			t = t + 1;
 			log(isDeclared);
 			log(q);
 		}
-		ret(r);
+		ret(y);
 	}
 	else {
 		loop (x <= 10){
 		   log(x);
 		   x = x + 1;
 		}
-		ret(r);
+		ret(x);
 	}
 }
 call returnValidString();

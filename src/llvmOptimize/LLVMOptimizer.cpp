@@ -13,9 +13,6 @@
 #include "llvmOptimize/LLVMOptimizer.h"
 
 void LLVMOptimizer::optimize(llvm::Module* module) {
-	// Create the analysis managers.
-	// These must be declared in this order so that they are destroyed in the
-	// correct order due to inter-analysis-manager references.
 
 	if (!module) {
 		std::cerr << "Optimization aborted: module pointer is null." << std::endl;
@@ -28,11 +25,6 @@ void LLVMOptimizer::optimize(llvm::Module* module) {
 	llvm::ModuleAnalysisManager MAM;
 
 	std::cerr << "Initializing pass managers..." << std::endl;
-
-	// Create the new pass manager builder.
-	// Take a look at the PassBuilder constructor parameters for more
-	// customization, e.g. specifying a TargetMachine or various debugging
-	// options.
 
 	llvm::PassBuilder PB;
 
@@ -47,8 +39,6 @@ void LLVMOptimizer::optimize(llvm::Module* module) {
 
 	std::cout << "Registering analyses..." << std::endl;
 
-	// Create the pass manager.
-	// This one corresponds to a typical -O2 optimization pipeline.
 	llvm::ModulePassManager MPM = PB.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O3);
 
 	std::cout << "Building default pipeline..." << std::endl;

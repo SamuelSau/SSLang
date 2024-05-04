@@ -17,7 +17,6 @@ void Parser::advance() {
     
     currentToken = std::move(nextToken); // Safely move now that nextToken is guaranteed to have been loaded
     nextToken = lexer.next(); 
-    
 }
 
 void Parser::consume(Token::Kind kind, const std::string& errorMessage) {
@@ -37,7 +36,16 @@ const Token& Parser::peekToken() const {
 //Declaration parsing
 std::unique_ptr<Declaration> Parser::parseDeclaration() {
     if (currentToken.is(Token::Kind::Int)) {
-        return parseIntDeclaration();
+        std::cout << "Parsing int declaration of either array or not\n";
+        // Check if the next token after the identifier is a left square bracket
+        if (peekToken().is(Token::Kind::Array)) {
+            std::cout << "Parsing array declaration\n";
+            return parseArrayDeclaration();
+        }
+        else {
+            std::cout << "Parsing int declaration\n";
+            return parseIntDeclaration();
+        }
     }
     else if (currentToken.is(Token::Kind::Float)) {
         return parseFloatDeclaration();
@@ -51,11 +59,9 @@ std::unique_ptr<Declaration> Parser::parseDeclaration() {
     }
     else {
        throw std::runtime_error("Expected declaration type of either int, flt, or str.");
-
-
     }
 }
-
+ 
 std::unique_ptr<Expression> Parser::parseExpression() {
     std::unique_ptr<Expression> leftExp;
     if (currentToken.is(Token::Kind::End)) {
@@ -98,11 +104,20 @@ std::unique_ptr<Expression> Parser::parseExpression() {
             peekToken().is(Token::Kind::GreaterThanEqual) ||
             peekToken().is(Token::Kind::LessThan) ||
             peekToken().is(Token::Kind::LessThanEqual))) {
-         
-                leftExp = parseBinary();
-   }     
-   else {
+            leftExp = parseBinary();
+   }
+   else { // Primary expression
         leftExp = parsePrimary();
+        while (true) {
+            if (currentToken.is_one_of(Token::Kind::ArrayAdd, Token::Kind::ArrayRemove)) {
+                std::cout << "Parsing array add or remove\n";
+                std::cout << "Name of the object is: " << leftExp->getName() << "\n";
+                leftExp = parseMethodCall(std::move(leftExp));
+            }
+            else {
+                break;
+            }
+        }
    }
    return leftExp;
 }

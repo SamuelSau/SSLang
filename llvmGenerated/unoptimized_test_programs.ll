@@ -20,7 +20,7 @@ source_filename = "MyModule"
 @printedFloatInt = private unnamed_addr constant [4 x i8] c"%f\0A\00", align 1
 @printedFormatInt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
-define float @returnValidString() {
+define i32 @returnValidString() {
 entry:
   %loopVar = alloca i32, align 4
   %x = load i32, ptr @x, align 4
@@ -54,8 +54,8 @@ forBody:                                          ; preds = %forCond
   br label %forCond
 
 forEnd:                                           ; preds = %forCond
-  %r = load float, ptr @r, align 4
-  ret float %r
+  %y = load i32, ptr @y, align 4
+  ret i32 %y
 
 whileCond:                                        ; preds = %whileBody, %else
   %x2 = load i32, ptr @x, align 4
@@ -71,14 +71,14 @@ whileBody:                                        ; preds = %whileCond
   br label %whileCond
 
 whileExit:                                        ; preds = %whileCond
-  %r7 = load float, ptr @r, align 4
-  ret float %r7
+  %x7 = load i32, ptr @x, align 4
+  ret i32 %x7
 }
 
 declare i32 @printf(ptr, ...)
 
 define i32 @main() {
 entry:
-  %0 = call float @returnValidString()
+  %0 = call i32 @returnValidString()
   ret i32 0
 }

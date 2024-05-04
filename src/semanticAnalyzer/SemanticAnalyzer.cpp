@@ -35,6 +35,23 @@ void SemanticAnalyzer::visit(const BoolDeclaration* decl) {
     symbolTable.addVariable(decl->name, "bool");
 }
 
+void SemanticAnalyzer::visit(const ArrayDeclaration* decl) {
+    if (symbolTable.isDeclared(decl->name)) {
+        throw std::runtime_error("Array '" + decl->name + "' is already declared in this scope.");
+    }
+
+    // Assume all arrays are of integer type for simplicity
+    for (const auto& element : decl->elements) {
+        auto elemType = element->getType(symbolTable);
+        if (elemType != "int") {
+            throw std::runtime_error("Type mismatch in array initializer for '" + decl->name + "', expected 'int', found '" + elemType + "'.");
+        }
+    }
+
+    // Add the array to the symbol table
+    symbolTable.addVariable(decl->name, "array");
+}
+
 void SemanticAnalyzer::visit(const AssignmentExpression* expr) {
     if (!insideFunction) {
         throw std::runtime_error("Assignment expressions must be inside a function definition.");
@@ -85,6 +102,34 @@ void SemanticAnalyzer::visit(const UnaryExpression* expr) {
 
 }
 
+void SemanticAnalyzer::visit(const MethodCall* expr) {
+    auto objectInfo = symbolTable.getSymbolInfo(expr->object->getName());
+    if (!objectInfo) {
+        throw std::runtime_error("Object " + expr->object->getName() + " not found in current scope.");
+    }
+
+    // Example: Check if the method is valid for the type (simplified, usually you need a more complex type system)
+    if (expr->name == "add" || expr->name == "remove") {
+        if (objectInfo->type != "array") {
+            throw std::runtime_error("Method '" + expr->name + "' is not supported by '" + objectInfo->type + "'.");
+        }
+    }
+
+    if (expr->name == "add") {
+        if (expr->arguments.size() != 1) {
+            throw std::runtime_error("Method 'add' expects one argument.");
+        }
+        auto argType = expr->arguments[0]->getType(symbolTable);
+        if (argType != "int") {
+            throw std::runtime_error("Invalid argument type for 'add', expected 'int', found '" + argType + "'.");
+        }
+    }
+    else if (expr->name == "remove") {
+        if (!expr->arguments.empty()) {
+            throw std::runtime_error("Method 'remove' does not take any arguments.");
+        }
+    }
+}
 
 void SemanticAnalyzer::visit(const PrintStatement* stmt) {
     if (!insideFunction) {

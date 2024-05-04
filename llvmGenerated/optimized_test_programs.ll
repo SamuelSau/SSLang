@@ -20,7 +20,7 @@ target triple = "x86_64-pc-windows-msvc"
 @printedFormatInt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
 ; Function Attrs: nofree nounwind
-define float @returnValidString() local_unnamed_addr #0 {
+define i32 @returnValidString() local_unnamed_addr #0 {
 entry:
   %x = load i32, ptr @x, align 4
   %cmptmp = icmp eq i32 %x, 2
@@ -40,11 +40,12 @@ forBody:                                          ; preds = %entry
   %q = load float, ptr @q, align 4
   %floatToDouble = fpext float %q to double
   %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFloatInt, double %floatToDouble)
+  %y = load i32, ptr @y, align 4
   br label %common.ret
 
 common.ret:                                       ; preds = %whileBody, %whileCond.preheader, %forBody
-  %common.ret.op = load float, ptr @r, align 4
-  ret float %common.ret.op
+  %common.ret.op = phi i32 [ %y, %forBody ], [ %x, %whileCond.preheader ], [ %addtmp6, %whileBody ]
+  ret i32 %common.ret.op
 
 whileBody:                                        ; preds = %whileCond.preheader, %whileBody
   %x29 = phi i32 [ %addtmp6, %whileBody ], [ %x, %whileCond.preheader ]

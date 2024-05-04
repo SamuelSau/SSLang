@@ -21,8 +21,6 @@ std::unique_ptr<Declaration> Parser::parseIntDeclaration() {
     
     if (!currentToken.is(Token::Kind::Number)) {
        throw std::runtime_error("Expected integer after '=' in variable declaration.");
-
-
     }
     std::string number = std::string(currentToken.lexeme());
     consume(Token::Kind::Number, "Expected integer after '='.");
@@ -109,7 +107,60 @@ std::unique_ptr<Declaration> Parser::parseBoolDeclaration(){
     
 }
 
+std::unique_ptr<Declaration> Parser::parseArrayDeclaration() {
+    consume(Token::Kind::Int, "Expected 'int' for array declaration."); // Assuming only int arrays for simplicity
+    consume(Token::Kind::Array, "Expected 'ARRAY' for array declaration.");
+    std::string arrayName = std::string(currentToken.lexeme());
+    consume(Token::Kind::Identifier, "Expected identifier for array name.");
+    consume(Token::Kind::Equal, "Expected '=' for array initialization.");
+    consume(Token::Kind::LeftCurly, "Expected '{' to start array initializer list.");
+    std::vector<std::unique_ptr<Expression>> elements;
+    if (!currentToken.is(Token::Kind::RightCurly)) {
+        do {
+            elements.push_back(parseExpression());
+            if (!currentToken.is(Token::Kind::Comma)) {
+                break;
+            }
+            consume(Token::Kind::Comma, "Expected ',' or '}' in array initializer.");
+        } while (!currentToken.is(Token::Kind::RightCurly));
+    }
+    consume(Token::Kind::RightCurly, "Expected '}' to end array initializer list.");
+    consume(Token::Kind::Semicolon, "Expected ';' after array declaration.");
+    return std::make_unique<ArrayDeclaration>(arrayName, std::move(elements));
+}
+
 //Parsing expressions
+std::unique_ptr<Expression> Parser::parseMethodCall(std::unique_ptr<Expression> object) {
+    std::vector<std::unique_ptr<Expression>> arguments;
+    std::string methodName;
+
+    if (currentToken.is(Token::Kind::ArrayAdd)) {
+        std::cout << "Parsing add method\n";
+        // Expect exactly one argument for 'add'
+        consume(Token::Kind::ArrayAdd, "Expected 'add' keyword.");
+        arguments.push_back(parseExpression());
+        if (!currentToken.is(Token::Kind::RightParen)) {
+            throw std::runtime_error("Method 'add' expects one argument.");
+        }
+        methodName = "add";
+    }
+
+    else if (currentToken.is(Token::Kind::ArrayRemove)) {
+        // No arguments should be provided for 'remove'
+        consume(Token::Kind::ArrayRemove, "Expected 'remove' keyword.");
+        if (!currentToken.is(Token::Kind::RightParen)) {
+            throw std::runtime_error("Method 'remove' does not take any arguments.");
+        }
+        methodName = "remove";
+    }
+
+    consume(Token::Kind::RightParen, "Expected ')' to close method call.");
+    consume(Token::Kind::Semicolon, "Expected ';' after method call.");
+    return std::make_unique<MethodCall>(std::move(object), methodName, std::move(arguments));
+}
+
+
+
 std::unique_ptr<Expression> Parser::parseAssignment() {
     // Example: Parsing "x = 5;"
     if (currentToken.is(Token::Kind::Identifier)) {
@@ -172,7 +223,6 @@ std::unique_ptr<Expression> Parser::parseBinary() {
     return left; // If no binary operation, return the primary expression
 }
 
-
 std::unique_ptr<Expression> Parser::parsePrimary() {
     if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String)) {
        throw std::runtime_error("Forbidden keyword for expressions. Please use \"int\", \"flt\", or \"str\" for declarations.");
@@ -188,25 +238,25 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
     else if (currentToken.is(Token::Kind::Return)){
        throw std::runtime_error("No returning for primary expressions");
 
-
     }
     else if (currentToken.is_one_of(Token::Kind::Call, Token::Kind::Function)){
        throw std::runtime_error("No functions calls or definitions in primary expressions.");
-
-
     }
-    else if (currentToken.is_one_of(Token::Kind::LeftCurly, Token::Kind::RightCurly, Token::Kind::LeftParen, Token::Kind::RightParen, Token::Kind::LeftSquare, Token::Kind::RightSquare)) {
-       throw std::runtime_error("Forbidden keyword for expressions. Do not use curly braces, parentheses, or square brackets in expressions.");
-
-
-    }
+    //else if (currentToken.is_one_of(Token::Kind::LeftCurly, Token::Kind::RightCurly, Token::Kind::LeftParen, Token::Kind::RightParen, Token::Kind::LeftSquare, Token::Kind::RightSquare)) {
+    //   throw std::runtime_error("Forbidden keyword for expressions. Do not use curly braces, parentheses, or square brackets in expressions.");
+    //}
     else if (currentToken.is(Token::Kind::Comment)) {
         advance();
     }
     else if (currentToken.is(Token::Kind::Identifier)) {
-        auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
+        if (nextToken.is_one_of(Token::Kind::ArrayAdd, Token::Kind::ArrayRemove)) { //method calling
+            std::string identifier = std::string(currentToken.lexeme());
+            advance(); //go to next token after identifier
+            return std::make_unique<PrimaryExpression>(identifier);
+        }
+        std::string identifier = std::string(currentToken.lexeme());
         consume(Token::Kind::Identifier, "Expected identifier.");
-        return expr;
+        return std::make_unique<PrimaryExpression>(identifier);
     }
     else if (currentToken.is(Token::Kind::Number)) {
         auto expr = std::make_unique<PrimaryExpression>(std::string(currentToken.lexeme()));
@@ -337,13 +387,8 @@ std::unique_ptr<Statement> Parser::parseReturnStatement() {
 }
 
 std::unique_ptr<Statement> Parser::parseIfStatement() {
-    if (!currentToken.is(Token::Kind::If)){
-       throw std::runtime_error("Expected 'if' keyword.");
-    }
+
     consume(Token::Kind::If, "Expected 'if' keyword.");
-    if (!currentToken.is(Token::Kind::LeftParen)){
-       throw std::runtime_error("Expected '(' after 'if' keyword.");
-    }
     consume(Token::Kind::LeftParen, "Expected '(' after 'if' keyword.");
     auto condition = parseExpression();
 

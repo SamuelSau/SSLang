@@ -26,6 +26,7 @@ public:
     void visit(const FloatDeclaration* decl) override;
     void visit(const StringDeclaration* decl) override;
     void visit(const BoolDeclaration* decl) override;
+    void visit(const ArrayDeclaration* decl) override;
     void visit(const ReturnStatement* stmt) override;
     void visit(const ForLoopStatement* stmt) override;
     void visit(const WhileLoopStatement* stmt) override;
@@ -38,6 +39,7 @@ public:
     void visit(const UnaryExpression* expr) override;
     void visit(const PrimaryExpression* expr) override;
     void visit(const AssignmentExpression* expr) override;
+    void visit(const MethodCall* expr) override;
     void visit(const FunctionDefinition* expr) override;
     void visit(const FunctionCall* call) override;
 
@@ -56,7 +58,16 @@ private:
 
     std::vector<std::string> functionCalls;
 
-    // Add any additional state needed for code generation
+    llvm::Function* mallocFunction; // External declaration for malloc
+    llvm::Function* reallocFunction; // External declaration for realloc
+    llvm::Function* freeFunction;   // External declaration for free
+    
+    llvm::Value* getCurrentSize(llvm::Value* arrayPtr);
+    llvm::Value* getCapacity(llvm::Value* arrayPtr);
+    void initializeExternalFunctions();
 
-}; 
+    llvm::Value* createDynamicArray(llvm::Type* elemType, size_t initialCapacity);
+    void addElementToArray(llvm::Value* arrayPtr, llvm::Value* element, llvm::Value* currentSize, llvm::Value* capacity);
+    void removeLastElementFromArray(llvm::Value* arrayPtr, llvm::Value* currentSize);
+};  
 #endif // LLVM_CODE_GEN_H
