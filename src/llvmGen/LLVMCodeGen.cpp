@@ -273,43 +273,46 @@ llvm::Module* LLVMCodeGen::getModule() const {
  }
 
  void LLVMCodeGen::visit(const ArrayDeclaration* decl) {
-	 //llvm::Type* elementType = llvm::Type::getInt32Ty(context);  // Assuming array of integers
-	 //std::vector<llvm::Constant*> initValues;
+	 llvm::Type* elementType = llvm::Type::getInt32Ty(context);  // assuming array of integers
+	 std::vector<llvm::Constant*> initvalues;
 
-	 //// Evaluate each element expression to initialize the array
-	 //for (const auto& expr : decl->elements) {
-		// llvm::Value* eval = evaluateExpression(expr.get());
-		// if (auto constEval = llvm::dyn_cast<llvm::ConstantInt>(eval)) {
-		//	 initValues.push_back(constEval);
-		// }
-		// else {
-		//	 std::cerr << "Non-constant expression in array initializer is not supported." << std::endl;
-		//	 return;
-		// }
-	 //}
+	 // evaluate each element expression to initialize the array
+	 for (const auto& expr : decl->elements) {
+		 llvm::Value* eval = evaluateExpression(expr.get());
+		 if (auto consteval = llvm::dyn_cast<llvm::ConstantInt>(eval)) {
+			 initvalues.push_back(consteval);
+		 }
+		 else {
+			 std::cerr << "non-constant expression in array initializer is not supported." << std::endl;
+			 return;
+		 }
+	 }
 
-	 //llvm::ArrayType* arrayType = llvm::ArrayType::get(elementType, decl->elements.size());
-	 //llvm::Constant* arrayInit = llvm::ConstantArray::get(arrayType, initValues);
+	 llvm::ArrayType* arraytype = llvm::ArrayType::get(elementType, decl->elements.size());
+	 llvm::Constant* arrayinit = llvm::ConstantArray::get(arraytype, initvalues);
 
-	 //if (currentFunction) {
-		// llvm::IRBuilder<> tmpBuilder(&currentFunction->getEntryBlock(), currentFunction->getEntryBlock().begin());
-		// llvm::AllocaInst* alloca = tmpBuilder.CreateAlloca(arrayType, nullptr, decl->name);
-		// builder.CreateStore(arrayInit, alloca);
-		// currentLocals[decl->name] = alloca;
-	 //}
-	 //else {
-		// // Global array
-		// llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
-		//	 *module,
-		//	 arrayType,
-		//	 false, // isConstant: false since it's a variable
-		//	 llvm::GlobalValue::InternalLinkage,
-		//	 arrayInit, 
-		//	 decl->name 
-		// );
-		// gVar->setAlignment(llvm::MaybeAlign(4)); // Alignment for 32-bit integers
-		// globals[decl->name] = gVar;
-	 //}
+	 if (currentFunction) {
+		 std::cout << "current function" << std::endl;
+		 llvm::IRBuilder<> tmpbuilder(&currentFunction->getEntryBlock(), currentFunction->getEntryBlock().begin());
+		 llvm::AllocaInst* alloca = tmpbuilder.CreateAlloca(arraytype, nullptr, decl->name);
+		 builder.CreateStore(arrayinit, alloca);
+		 currentLocals[decl->name] = alloca;
+	 }
+	 else {
+		 // global array
+		 std::cout << "global function in array declaration" << std::endl;
+		 llvm::GlobalVariable* gVar = new llvm::GlobalVariable(
+			 *module,
+			 arraytype,
+			 false, // isconstant: false since it's a variable
+			 llvm::GlobalValue::InternalLinkage,
+			 arrayinit, 
+			 decl->name 
+		 );
+		 gVar->setAlignment(llvm::MaybeAlign(4)); // alignment for 32-bit integers
+		 globals[decl->name] = gVar;
+	 }
+
 	 //__________________________________________________________________________
 	//std::cout << "Creating array declaration\n";
 	//llvm::Type* elementType = llvm::Type::getInt32Ty(context); // Example with int type
@@ -318,7 +321,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
 	//std::cout << "Able to create elementType, initialSize and arrayPtr\n";
 
-	//// Assuming `createDynamicArray` correctly sets up an array with initial capacity
+	////Assuming `createDynamicArray` correctly sets up an array with initial capacity
 	//for (size_t i = 0; i < decl->size; ++i) {
 	//	llvm::Value* elemVal = evaluateExpression(decl->elements[i].get());
 	//	llvm::Value* elemPtr = builder.CreateGEP(elementType, arrayPtr, {
@@ -328,24 +331,25 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	//}
 
 	//currentLocals[decl->name] = arrayPtr;
+	 //--------
 
 	 //std::cout << "Creating global array declaration\n";
 	 //llvm::Type* elementType = llvm::Type::getInt32Ty(context); // Assuming arrays of int type for simplicity
 
-	 // Initialize the IRBuilder with the correct context
+	 // //Initialize the IRBuilder with the correct context
 	 //llvm::IRBuilder<> tmpBuilder(module->getContext());
 
-	 // Create a temporary block for initialization (not attached to any function)
+	 // //Create a temporary block for initialization (not attached to any function)
 	 //llvm::BasicBlock* tempBlock = llvm::BasicBlock::Create(context, "init", nullptr);
 	 //tmpBuilder.SetInsertPoint(tempBlock);
 
-	 // Create an initial size constant
+	 //// Create an initial size constant
 	 //llvm::Value* initialSize = llvm::ConstantInt::get(context, llvm::APInt(32, decl->size, true));
 
-	 // Create the dynamic array at global scope
+	 // //Create the dynamic array at global scope
 	 //llvm::Value* arrayPtr = createDynamicArray(elementType, decl->size);
 
-	 // Register the global array in the module
+	 // //Register the global array in the module
 	 //std::string arrayName = decl->name; // Ensure `name` is part of ArrayDeclaration
 	 //llvm::GlobalVariable* globalArray = new llvm::GlobalVariable(
 		// *module,
@@ -358,51 +362,51 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
 	 //std::cout << "Registered global array in module" << std::endl;
 
-	 // Store the array pointer in the global variable
+	 // //Store the array pointer in the global variable
 	 //tmpBuilder.CreateStore(arrayPtr, globalArray);
 
 	 //std::cout << "Stored array pointer in global variable" <<std::endl;
 
-	 // Cleanup: Remove the temporary block after use
+	 // //Cleanup: Remove the temporary block after use
 	 //tempBlock->eraseFromParent();
 
 	 //std::cout << "Global array " << arrayName << " created and registered.\n";
 	 //__________________________________________________________________________
 
-	 std::cout << "Creating global array declaration" << std::endl;
-	 llvm::Type* elementType = llvm::Type::getInt32Ty(context); // Assuming arrays of int type for simplicity
+	 //std::cout << "Creating global array declaration" << std::endl;
+	 //llvm::Type* elementType = llvm::Type::getInt32Ty(context); // Assuming arrays of int type for simplicity
 
-	 // Define a unique name for initialization function
-	 std::string initFuncName = decl->name + "_init";
-	 llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(context), false);
-	 llvm::Function* initFunc = llvm::Function::Create(funcType, llvm::Function::InternalLinkage, initFuncName, module);
-	 llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "entry", initFunc);
-	 llvm::IRBuilder<> builder(entry);
-	 std::cout << "Initialized function for array declaration" << std::endl;
+	 //// Define a unique name for initialization function
+	 //std::string initFuncName = decl->name + "_init";
+	 //llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(context), false);
+	 //llvm::Function* initFunc = llvm::Function::Create(funcType, llvm::Function::InternalLinkage, initFuncName, module);
+	 //llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "entry", initFunc);
+	 //llvm::IRBuilder<> builder(entry);
+	 //std::cout << "Initialized function for array declaration" << std::endl;
 
-	 // Create the dynamic array
-	 llvm::Value* arrayPtr = createDynamicArray(elementType, decl->size);
+	 //// Create the dynamic array
+	 //llvm::Value* arrayPtr = createDynamicArray(elementType, decl->size);
 
-	 // Register the global array in the module
-	 llvm::GlobalVariable* globalArray = new llvm::GlobalVariable(
-		 *module,
-		 llvm::PointerType::getUnqual(elementType), // Pointer to the array type
-		 false, // isConstant
-		 llvm::GlobalValue::ExternalLinkage,
-		 nullptr, // No initializer here, initializer is created dynamically
-		 decl->name
-	 );
+	 //// Register the global array in the module
+	 //llvm::GlobalVariable* globalArray = new llvm::GlobalVariable(
+		// *module,
+		// llvm::PointerType::getUnqual(elementType), // Pointer to the array type
+		// false, // isConstant
+		// llvm::GlobalValue::ExternalLinkage,
+		// nullptr, // No initializer here, initializer is created dynamically
+		// decl->name
+	 //);
 
-	 // Store the array pointer in the global variable
-	 builder.CreateStore(arrayPtr, globalArray);
+	 //// Store the array pointer in the global variable
+	 //builder.CreateStore(arrayPtr, globalArray);
 
-	 // Finish the function
-	 builder.CreateRetVoid();
+	 //// Finish the function
+	 //builder.CreateRetVoid();
 
-	 std::cout << "Global array " << decl->name << " created and registered with initializer.\n";
+	 //std::cout << "Global array " << decl->name << " created and registered with initializer.\n";
 
-	 // Save the global variable in globals for later reference
-	 globals[decl->name] = globalArray;
+	 //// Save the global variable in globals for later reference
+	 //globals[decl->name] = globalArray;
 
 
 }
@@ -978,7 +982,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 llvm::BasicBlock* entryBB = llvm::BasicBlock::Create(context, "entry", function);
 	 builder.SetInsertPoint(entryBB);
 
-	 builder.CreateBr(entryBB);// Branch to itself to ensure the block has a terminator
+	 //builder.CreateBr(entryBB);// Branch to itself to ensure the block has a terminator
 	 
 	 // Record the function arguments in the NamedValues map.
 	 unsigned idx = 0;
@@ -1104,31 +1108,32 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
  llvm::Value* LLVMCodeGen::createDynamicArray(llvm::Type* elemType, size_t initialCapacity) {
 
-	 //if (currentFunction && !currentFunction->getEntryBlock().empty()) {
-		// auto* terminator = currentFunction->getEntryBlock().getTerminator();
-		// if (terminator) {
-		//	 std::cout << "Terminator is present in createDynamicArray." << std::endl;
-		//	 llvm::IRBuilder<> builder(terminator);
+	 if (currentFunction && !currentFunction->getEntryBlock().empty()) {
+		 auto* terminator = currentFunction->getEntryBlock().getTerminator();
+		 if (terminator) {
+			 std::cout << "Terminator is present in createDynamicArray." << std::endl;
+			 llvm::IRBuilder<> builder(terminator);
 
-		// }
-		// else {
-		//	 std::cerr << "No terminator in entry block createDynamicArray." << std::endl;
-		//	 return nullptr; // or handle this scenario more gracefully
-		// }
-	 //}
-	 //else {
-		// std::cerr << "Invalid function context or missing entry block createDynamicArray." << std::endl;
-		// return nullptr;
-	 //}
-	 ////llvm::IRBuilder<> builder(currentFunction->getEntryBlock().getTerminator());
-	 //std::cout << "After creating IRBuilder" << std::endl;
-	 //llvm::Value* elemSize = llvm::ConstantInt::get(context, llvm::APInt(32, module->getDataLayout().getTypeAllocSize(elemType)));
-	 //std::cout << "After getting elemSize" << std::endl;
-	 //llvm::Value* allocSize = builder.CreateMul(elemSize, llvm::ConstantInt::get(context, llvm::APInt(32, initialCapacity)), "allocSize");
-	 //std::cout << "After getting allocSize" << std::endl;
-	 //llvm::Value* arrayMem = builder.CreateCall(mallocFunction, allocSize, "arrayMem");
-	 //std::cout << "After creating arrayMem" << std::endl;
-	 //return builder.CreateBitCast(arrayMem, llvm::PointerType::getUnqual(elemType), "arrayPtr");\
+		 }
+		 else {
+			 std::cerr << "No terminator in entry block createDynamicArray." << std::endl;
+			 return nullptr; 
+		 }
+	 }
+	 else {
+		 std::cerr << "Invalid function context or missing entry block createDynamicArray." << std::endl;
+		 return nullptr;
+	 }
+	 llvm::IRBuilder<> builder(currentFunction->getEntryBlock().getTerminator());
+	 std::cout << "After creating IRBuilder" << std::endl;
+	 llvm::Value* elemSize = llvm::ConstantInt::get(context, llvm::APInt(32, module->getDataLayout().getTypeAllocSize(elemType)));
+	 std::cout << "After getting elemSize" << std::endl;
+	 llvm::Value* allocSize = builder.CreateMul(elemSize, llvm::ConstantInt::get(context, llvm::APInt(32, initialCapacity)), "allocSize");
+	 std::cout << "After getting allocSize" << std::endl;
+	 llvm::Value* arrayMem = builder.CreateCall(mallocFunction, allocSize, "arrayMem");
+	 std::cout << "After creating arrayMem" << std::endl;
+	 return builder.CreateBitCast(arrayMem, llvm::PointerType::getUnqual(elemType), "arrayPtr");
+	 //_______________________________________________________________________
 
 	 //std::cout << "Creating dynamic array in global scope" << std::endl;
 	 //llvm::IRBuilder<> builder(context);
@@ -1150,28 +1155,28 @@ llvm::Module* LLVMCodeGen::getModule() const {
 
 	 //return builder.CreateBitCast(arrayMem, llvm::PointerType::getUnqual(elemType), "arrayPtr");
 	 //______________________________________________________________________
-	 std::cout << "Creating dynamic array in global scope" << std::endl;
+	 //std::cout << "Creating dynamic array in global scope" << std::endl;
 
-	 // Create a dummy function to host the block if not already within a function
-	 llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(context), false);
-	 llvm::Function* dummyFunc = llvm::Function::Create(funcType, llvm::Function::InternalLinkage, "dummyFunc", module);
-	 llvm::BasicBlock* tempBlock = llvm::BasicBlock::Create(context, "init", dummyFunc);
+	 //// Create a dummy function to host the block if not already within a function
+	 //llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(context), false);
+	 //llvm::Function* dummyFunc = llvm::Function::Create(funcType, llvm::Function::InternalLinkage, "dummyFunc", module);
+	 //llvm::BasicBlock* tempBlock = llvm::BasicBlock::Create(context, "init", dummyFunc);
 
-	 llvm::IRBuilder<> builder(tempBlock);
-	 std::cout << "IRBuilder and tempBlock initialized." << std::endl;
+	 //llvm::IRBuilder<> builder(tempBlock);
+	 //std::cout << "IRBuilder and tempBlock initialized." << std::endl;
 
-	 llvm::Value* elemSize = llvm::ConstantInt::get(context, llvm::APInt(32, module->getDataLayout().getTypeAllocSize(elemType)));
-	 llvm::Value* allocSize = builder.CreateMul(elemSize, llvm::ConstantInt::get(context, llvm::APInt(32, initialCapacity)), "allocSize");
-	 llvm::Value* arrayMem = builder.CreateCall(mallocFunction, allocSize, "arrayMem");
-	 std::cout << "Initialized sizes and allocated memory for array." << std::endl;
-	 // Now you can safely use the temporary block, knowing it is properly contained.
-	 llvm::Value* arrayPtr = builder.CreateBitCast(arrayMem, llvm::PointerType::getUnqual(elemType), "arrayPtr");
-	 std::cout << "Bitcasted array memory to array pointer." << std::endl;
-	 // Cleanup
-	 tempBlock->eraseFromParent();  // Safe to remove now; all uses are complete
-	 dummyFunc->eraseFromParent();  // Remove the dummy function as well
-	 std::cout << "Erased temporary block and dummy function. Returning array pointer" << std::endl;
-	 return arrayPtr;
+	 //llvm::Value* elemSize = llvm::ConstantInt::get(context, llvm::APInt(32, module->getDataLayout().getTypeAllocSize(elemType)));
+	 //llvm::Value* allocSize = builder.CreateMul(elemSize, llvm::ConstantInt::get(context, llvm::APInt(32, initialCapacity)), "allocSize");
+	 //llvm::Value* arrayMem = builder.CreateCall(mallocFunction, allocSize, "arrayMem");
+	 //std::cout << "Initialized sizes and allocated memory for array." << std::endl;
+	 //// Now you can safely use the temporary block, knowing it is properly contained.
+	 //llvm::Value* arrayPtr = builder.CreateBitCast(arrayMem, llvm::PointerType::getUnqual(elemType), "arrayPtr");
+	 //std::cout << "Bitcasted array memory to array pointer." << std::endl;
+	 //// Cleanup
+	 //tempBlock->eraseFromParent();  // Safe to remove now; all uses are complete
+	 //dummyFunc->eraseFromParent();  // Remove the dummy function as well
+	 //std::cout << "Erased temporary block and dummy function. Returning array pointer" << std::endl;
+	 //return arrayPtr;
 
  }
 

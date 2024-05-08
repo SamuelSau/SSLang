@@ -31,6 +31,8 @@ void GenerateOBJ::generateObjectFile(llvm::Module* module, const std::string& ou
     LLVMInitializeX86TargetMC();
     LLVMInitializeX86AsmPrinter();
 
+    std::cout << "Initialized targets" << std::endl;
+
     auto TargetTriple = llvm::sys::getDefaultTargetTriple();
     std::string Error;
     auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);

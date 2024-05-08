@@ -14,7 +14,6 @@ str formalGreeting = "hello";
 int ARRAY numberList = {1,2,3,4,5,6,7,8,9,10};
 
 function returnValidString() -> int {
-    numberList.add(11); 
 	if (x equals 2){
 		loop range(1,2){
 			t = t + 1;

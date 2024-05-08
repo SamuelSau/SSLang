@@ -14,11 +14,18 @@ source_filename = "MyModule"
 @cc = global i32 10000000, align 4
 @informalGreeting = private constant [4 x i8] c"sup\00", align 1
 @formalGreeting = private constant [6 x i8] c"hello\00", align 1
+@numberList = internal global [10 x i32] [i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10], align 4
 @printedFormatBool = private unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
 @trueStr = private unnamed_addr constant [5 x i8] c"true\00", align 1
 @falseStr = private unnamed_addr constant [6 x i8] c"false\00", align 1
 @printedFloatInt = private unnamed_addr constant [4 x i8] c"%f\0A\00", align 1
 @printedFormatInt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+
+declare ptr @malloc(i64)
+
+declare ptr @realloc(ptr, i64)
+
+declare void @free(ptr)
 
 define i32 @returnValidString() {
 entry:
