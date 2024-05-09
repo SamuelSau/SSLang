@@ -80,5 +80,11 @@ To comment a line of code in SSLang, use //:
 ```
 // This is a comment
 ```
+
+## Initialize Arrays
+```
+int ARRAY numberList = {1,2,3,4,5,6,7,8,9,10};
+```
+
 ## Conclusion
 This documentation provides a basic overview of SSLang's syntax and features. I will try to add more features and fix more bugs for this.
