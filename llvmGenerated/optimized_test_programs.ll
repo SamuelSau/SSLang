@@ -6,7 +6,7 @@ target triple = "x86_64-pc-windows-msvc"
 @q = local_unnamed_addr global float 0x4029E05C00000000, align 4
 @r = local_unnamed_addr global float 0x41AB909F60000000, align 4
 @isDeclared = local_unnamed_addr global i1 false, align 1
-@x = local_unnamed_addr global i32 2, align 4
+@x = local_unnamed_addr global i32 6, align 4
 @y = local_unnamed_addr global i32 3, align 4
 @p = local_unnamed_addr global i32 7, align 4
 @Q = local_unnamed_addr global i32 9, align 4
@@ -30,7 +30,8 @@ whileCond.preheader:                              ; preds = %entry
   %cmptmp38 = icmp slt i32 %x, 11
   br i1 %cmptmp38, label %whileBody, label %common.ret
 
-forBody:                                          ; preds = %entry
+forBody:                                          ; preds = %entry, %forBody
+  %loopVar.010 = phi i32 [ %nextVar, %forBody ], [ 1, %entry ]
   %t = load i32, ptr @t, align 4
   %addtmp = add i32 %t, 1
   store i32 %addtmp, ptr @t, align 4
@@ -40,12 +41,17 @@ forBody:                                          ; preds = %entry
   %q = load float, ptr @q, align 4
   %floatToDouble = fpext float %q to double
   %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFloatInt, double %floatToDouble)
+  %nextVar = add nuw nsw i32 %loopVar.010, 1
+  %exitcond.not = icmp eq i32 %nextVar, 100000
+  br i1 %exitcond.not, label %forEnd, label %forBody
+
+common.ret:                                       ; preds = %whileBody, %whileCond.preheader, %forEnd
+  %common.ret.op = phi i32 [ %y, %forEnd ], [ %x, %whileCond.preheader ], [ %addtmp6, %whileBody ]
+  ret i32 %common.ret.op
+
+forEnd:                                           ; preds = %forBody
   %y = load i32, ptr @y, align 4
   br label %common.ret
-
-common.ret:                                       ; preds = %whileBody, %whileCond.preheader, %forBody
-  %common.ret.op = phi i32 [ %y, %forBody ], [ %x, %whileCond.preheader ], [ %addtmp6, %whileBody ]
-  ret i32 %common.ret.op
 
 whileBody:                                        ; preds = %whileCond.preheader, %whileBody
   %x29 = phi i32 [ %addtmp6, %whileBody ], [ %x, %whileCond.preheader ]
@@ -71,7 +77,8 @@ whileCond.preheader.i:                            ; preds = %entry
   %cmptmp38.i = icmp slt i32 %x.i, 11
   br i1 %cmptmp38.i, label %whileBody.i, label %returnValidString.exit
 
-forBody.i:                                        ; preds = %entry
+forBody.i:                                        ; preds = %entry, %forBody.i
+  %loopVar.010.i = phi i32 [ %nextVar.i, %forBody.i ], [ 1, %entry ]
   %t.i = load i32, ptr @t, align 4
   %addtmp.i = add i32 %t.i, 1
   store i32 %addtmp.i, ptr @t, align 4
@@ -81,7 +88,9 @@ forBody.i:                                        ; preds = %entry
   %q.i = load float, ptr @q, align 4
   %floatToDouble.i = fpext float %q.i to double
   %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @printedFloatInt, double %floatToDouble.i)
-  br label %returnValidString.exit
+  %nextVar.i = add nuw nsw i32 %loopVar.010.i, 1
+  %exitcond.not.i = icmp eq i32 %nextVar.i, 100000
+  br i1 %exitcond.not.i, label %returnValidString.exit, label %forBody.i
 
 whileBody.i:                                      ; preds = %whileCond.preheader.i, %whileBody.i
   %x29.i = phi i32 [ %addtmp6.i, %whileBody.i ], [ %x.i, %whileCond.preheader.i ]
@@ -92,7 +101,7 @@ whileBody.i:                                      ; preds = %whileCond.preheader
   %cmptmp3.i = icmp slt i32 %addtmp6.i, 11
   br i1 %cmptmp3.i, label %whileBody.i, label %returnValidString.exit
 
-returnValidString.exit:                           ; preds = %whileBody.i, %whileCond.preheader.i, %forBody.i
+returnValidString.exit:                           ; preds = %whileBody.i, %forBody.i, %whileCond.preheader.i
   ret i32 0
 }
 

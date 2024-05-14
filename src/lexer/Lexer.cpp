@@ -89,6 +89,8 @@ Token Lexer::next() noexcept {
       return atom(Token::Kind::Asterisk);
     case '/':
       return slash_or_comment();
+    case '%':
+        return atom(Token::Kind::Modulo);
     case '#':
       return atom(Token::Kind::Hash);
     case '.':

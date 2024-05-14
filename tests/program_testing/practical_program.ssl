@@ -1,0 +1,23 @@
+//check if the number is a even or odd
+
+int x = 10;
+int y = 1;
+str falseOutput = "False x is not an even number";
+str trueOutput = "True x is an even number";
+
+function isEven() -> bool {
+    y = x % 2;
+	log(true);
+	log(y);
+	if (y notEquals 0) {
+		log(false);
+		ret(false);
+	}
+	else {
+	    log(true);
+		log(trueOutput);
+		ret(true);
+	}
+}
+
+call isEven();

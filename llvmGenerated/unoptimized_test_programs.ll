@@ -4,7 +4,7 @@ source_filename = "MyModule"
 @q = global float 0x4029E05C00000000, align 4
 @r = global float 0x41AB909F60000000, align 4
 @isDeclared = global i1 false, align 1
-@x = global i32 2, align 4
+@x = global i32 6, align 4
 @y = global i32 3, align 4
 @p = global i32 7, align 4
 @Q = global i32 9, align 4
@@ -15,6 +15,7 @@ source_filename = "MyModule"
 @informalGreeting = private constant [4 x i8] c"sup\00", align 1
 @formalGreeting = private constant [6 x i8] c"hello\00", align 1
 @numberList = internal global [10 x i32] [i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10], align 4
+@secondNumberList = internal global [10 x i32] [i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20], align 4
 @printedFormatBool = private unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
 @trueStr = private unnamed_addr constant [5 x i8] c"true\00", align 1
 @falseStr = private unnamed_addr constant [6 x i8] c"false\00", align 1
@@ -43,7 +44,7 @@ else:                                             ; preds = %entry
 
 forCond:                                          ; preds = %forBody, %then
   %loopVar1 = load i32, ptr %loopVar, align 4
-  %loopcond = icmp slt i32 %loopVar1, 2
+  %loopcond = icmp slt i32 %loopVar1, 100000
   br i1 %loopcond, label %forBody, label %forEnd
 
 forBody:                                          ; preds = %forCond

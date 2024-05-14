@@ -96,6 +96,7 @@ std::unique_ptr<Expression> Parser::parseExpression() {
             peekToken().is(Token::Kind::Minus) ||
             peekToken().is(Token::Kind::Asterisk) ||
             peekToken().is(Token::Kind::Slash) ||
+			peekToken().is(Token::Kind::Modulo) ||
             peekToken().is(Token::Kind::And) ||
             peekToken().is(Token::Kind::Or) ||
             peekToken().is(Token::Kind::Equals) ||
@@ -103,7 +104,7 @@ std::unique_ptr<Expression> Parser::parseExpression() {
             peekToken().is(Token::Kind::GreaterThan) ||
             peekToken().is(Token::Kind::GreaterThanEqual) ||
             peekToken().is(Token::Kind::LessThan) ||
-            peekToken().is(Token::Kind::LessThanEqual))) {
+            peekToken().is(Token::Kind::LessThanEqual)))  {
             leftExp = parseBinary();
    }
    else { // Primary expression

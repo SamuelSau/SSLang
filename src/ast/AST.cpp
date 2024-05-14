@@ -213,7 +213,7 @@ std::unique_ptr<Expression> Parser::parseBinary() {
     auto left = parseUnary(); // Start with the highest precedence expressions
 
         // Check if a binary operation follows
-    if (currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash, Token::Kind::GreaterThan, Token::Kind::LessThan, Token::Kind::GreaterThanEqual, Token::Kind::LessThanEqual, Token::Kind::NotEquals, Token::Kind::Equals, Token::Kind::And, Token::Kind::Or)) {
+    if (currentToken.is_one_of(Token::Kind::Plus, Token::Kind::Minus, Token::Kind::Asterisk, Token::Kind::Slash, Token::Kind:: Modulo, Token::Kind::GreaterThan, Token::Kind::LessThan, Token::Kind::GreaterThanEqual, Token::Kind::LessThanEqual, Token::Kind::NotEquals, Token::Kind::Equals, Token::Kind::And, Token::Kind::Or)) {
         std::string op = std::string(currentToken.lexeme());
         consume(currentToken.kind(), "Expected an operator");
         auto right = parseUnary(); // Assume only one binary operation is allowed
@@ -442,10 +442,10 @@ std::unique_ptr<Function> Parser::parseFunctionDefinition() {
 
     consume(Token::Kind::Arrow, "Expected '->' after parameters.");
     std::string returnType = std::string(currentToken.lexeme());
-    if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String)) {
-        consume(currentToken.kind(), "Expected return type after '->' of which can be int, flt, or str.");
+    if (currentToken.is_one_of(Token::Kind::Int, Token::Kind::Float, Token::Kind::String, Token::Kind::Bool)) {
+        consume(currentToken.kind(), "Expected return type after '->' of which can be int, flt, str or bool");
     } else {
-       throw std::runtime_error("Expected return type of either int, flt, or str");
+       throw std::runtime_error("Expected return type of either int, flt, str, or bool");
 
 
     }

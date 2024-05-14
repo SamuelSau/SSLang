@@ -9,7 +9,7 @@ class Token {
 public:
     enum class Kind {
         Number, Identifier, LeftParen, RightParen, LeftSquare, RightSquare,
-        LeftCurly, RightCurly, LessThan, GreaterThan, Equal, Plus, Minus,
+        LeftCurly, RightCurly, LessThan, GreaterThan, Equal, Plus, Minus, Modulo,
         Asterisk, Slash, Hash, Dot, Comma, Colon, Semicolon, SingleQuote,
         DoubleQuote, Comment, Pipe, End, Unexpected, Function, If, Else, Range,
         Return, Loop, Int, Float, String, Bool, Arrow, StringLiteral,

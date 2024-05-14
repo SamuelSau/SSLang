@@ -312,103 +312,6 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 gVar->setAlignment(llvm::MaybeAlign(4)); // alignment for 32-bit integers
 		 globals[decl->name] = gVar;
 	 }
-
-	 //__________________________________________________________________________
-	//std::cout << "Creating array declaration\n";
-	//llvm::Type* elementType = llvm::Type::getInt32Ty(context); // Example with int type
-	//llvm::Value* initialSize = llvm::ConstantInt::get(context, llvm::APInt(32, decl->size, true));
-	//llvm::Value* arrayPtr = createDynamicArray(elementType, decl->size);
-
-	//std::cout << "Able to create elementType, initialSize and arrayPtr\n";
-
-	////Assuming `createDynamicArray` correctly sets up an array with initial capacity
-	//for (size_t i = 0; i < decl->size; ++i) {
-	//	llvm::Value* elemVal = evaluateExpression(decl->elements[i].get());
-	//	llvm::Value* elemPtr = builder.CreateGEP(elementType, arrayPtr, {
-	//		llvm::ConstantInt::get(context, llvm::APInt(32, i))
-	//		});
-	//	builder.CreateStore(elemVal, elemPtr);
-	//}
-
-	//currentLocals[decl->name] = arrayPtr;
-	 //--------
-
-	 //std::cout << "Creating global array declaration\n";
-	 //llvm::Type* elementType = llvm::Type::getInt32Ty(context); // Assuming arrays of int type for simplicity
-
-	 // //Initialize the IRBuilder with the correct context
-	 //llvm::IRBuilder<> tmpBuilder(module->getContext());
-
-	 // //Create a temporary block for initialization (not attached to any function)
-	 //llvm::BasicBlock* tempBlock = llvm::BasicBlock::Create(context, "init", nullptr);
-	 //tmpBuilder.SetInsertPoint(tempBlock);
-
-	 //// Create an initial size constant
-	 //llvm::Value* initialSize = llvm::ConstantInt::get(context, llvm::APInt(32, decl->size, true));
-
-	 // //Create the dynamic array at global scope
-	 //llvm::Value* arrayPtr = createDynamicArray(elementType, decl->size);
-
-	 // //Register the global array in the module
-	 //std::string arrayName = decl->name; // Ensure `name` is part of ArrayDeclaration
-	 //llvm::GlobalVariable* globalArray = new llvm::GlobalVariable(
-		// *module,
-		// llvm::PointerType::getUnqual(elementType), // Pointer to the array type
-		// false, // isConstant
-		// llvm::GlobalValue::ExternalLinkage,
-		// nullptr, // No initializer here, initializer is handled in `createDynamicArray`
-		// arrayName
-	 //);
-
-	 //std::cout << "Registered global array in module" << std::endl;
-
-	 // //Store the array pointer in the global variable
-	 //tmpBuilder.CreateStore(arrayPtr, globalArray);
-
-	 //std::cout << "Stored array pointer in global variable" <<std::endl;
-
-	 // //Cleanup: Remove the temporary block after use
-	 //tempBlock->eraseFromParent();
-
-	 //std::cout << "Global array " << arrayName << " created and registered.\n";
-	 //__________________________________________________________________________
-
-	 //std::cout << "Creating global array declaration" << std::endl;
-	 //llvm::Type* elementType = llvm::Type::getInt32Ty(context); // Assuming arrays of int type for simplicity
-
-	 //// Define a unique name for initialization function
-	 //std::string initFuncName = decl->name + "_init";
-	 //llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(context), false);
-	 //llvm::Function* initFunc = llvm::Function::Create(funcType, llvm::Function::InternalLinkage, initFuncName, module);
-	 //llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "entry", initFunc);
-	 //llvm::IRBuilder<> builder(entry);
-	 //std::cout << "Initialized function for array declaration" << std::endl;
-
-	 //// Create the dynamic array
-	 //llvm::Value* arrayPtr = createDynamicArray(elementType, decl->size);
-
-	 //// Register the global array in the module
-	 //llvm::GlobalVariable* globalArray = new llvm::GlobalVariable(
-		// *module,
-		// llvm::PointerType::getUnqual(elementType), // Pointer to the array type
-		// false, // isConstant
-		// llvm::GlobalValue::ExternalLinkage,
-		// nullptr, // No initializer here, initializer is created dynamically
-		// decl->name
-	 //);
-
-	 //// Store the array pointer in the global variable
-	 //builder.CreateStore(arrayPtr, globalArray);
-
-	 //// Finish the function
-	 //builder.CreateRetVoid();
-
-	 //std::cout << "Global array " << decl->name << " created and registered with initializer.\n";
-
-	 //// Save the global variable in globals for later reference
-	 //globals[decl->name] = globalArray;
-
-
 }
 
  void LLVMCodeGen::visit(const ReturnStatement* stmt) {
@@ -578,12 +481,14 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 // Evaluate the expression
 	 llvm::Value* valueToPrint = evaluateExpression(stmt->expr.get());
 	 if (!valueToPrint) {
-		 std::cerr << "Failed to evaluate expression for print statement.\n";
+		 std::cout << "Failed to evaluate expression for print statement" << std::endl;
 		 return;
 	 }
-
-	 std::cout << "Evaluated expression for print statement" << std::endl;
-
+	 else {
+		 std::cout << "Evaluated expression for print statement, type: " << std::endl;
+		 valueToPrint->getType()->print(llvm::errs());
+		 llvm::errs() << "\n";
+	 }
 	 llvm::Value* formatStr = nullptr;
 
 	 std::cout << "Created format string for print statement" << std::endl; 
@@ -624,6 +529,7 @@ llvm::Module* LLVMCodeGen::getModule() const {
 			 formatStr = builder.CreateGlobalStringPtr("%s\n", "printedFormatString");
 			 std::vector<llvm::Value*> printfArgs = { formatStr, valueToPrint };
 			 builder.CreateCall(printfFunc, printfArgs);
+			 return;
 		 }
 
 		 else {
@@ -726,6 +632,13 @@ llvm::Module* LLVMCodeGen::getModule() const {
 		 return;
 
 	 }
+
+	 else if (expr->op == "%") {
+		 std::cout << "Comparing left and right values for modulo" << std::endl;
+		 lastValue = builder.CreateSRem(left, right, "modtmp");
+		 return;
+	 }
+
 	 else {
 		 std::cerr << "Unsupported binary operation: " << expr->op << std::endl;
 		 lastValue = nullptr;
@@ -878,27 +791,27 @@ llvm::Module* LLVMCodeGen::getModule() const {
  void LLVMCodeGen::visit(const MethodCall* expr) {
 	 std::cout << "Method call: " << expr->name << std::endl;
 	 
-	if (expr->name == "add") {
-		llvm::Value* arrayPtr = globals[expr->object->getName()]; // Get the array pointer
-		std::cout << "Processed the array pointer" << std::endl;
-		llvm::Value* elementToAdd = evaluateExpression(expr->arguments[0].get());
-		std::cout << "Processed the elementToAdd" << std::endl;
-		llvm::Value* currentSize = getCurrentSize(arrayPtr); // You need to manage size separately
-		std::cout << "Processed the currentSize" << std::endl;
-		llvm::Value* capacity = getCapacity(arrayPtr); // Same for capacity
-		std::cout << "Processed the capacity" << std::endl;
-		addElementToArray(arrayPtr, elementToAdd, currentSize, capacity);
-		std::cout << "Processed addElementToArray" << std::endl;
-	}
-	else if (expr->name == "remove") {
-		llvm::Value* arrayPtr = globals[expr->object->getName()]; // Get the array pointer
-		llvm::Value* currentSize = getCurrentSize(arrayPtr); // You need to manage size separately
-		removeLastElementFromArray(arrayPtr, currentSize);
-	}
-	else {
-		std::cout << "The object name is: " << expr->object->getName() << std::endl;
-		std::cerr << "Unsupported method call: " << expr->name << std::endl;
-	}
+	//if (expr->name == "add") {
+	//	llvm::Value* arrayPtr = globals[expr->object->getName()]; // Get the array pointer
+	//	std::cout << "Processed the array pointer" << std::endl;
+	//	llvm::Value* elementToAdd = evaluateExpression(expr->arguments[0].get());
+	//	std::cout << "Processed the elementToAdd" << std::endl;
+	//	llvm::Value* currentSize = getCurrentSize(arrayPtr); // You need to manage size separately
+	//	std::cout << "Processed the currentSize" << std::endl;
+	//	llvm::Value* capacity = getCapacity(arrayPtr); // Same for capacity
+	//	std::cout << "Processed the capacity" << std::endl;
+	//	addElementToArray(arrayPtr, elementToAdd, currentSize, capacity);
+	//	std::cout << "Processed addElementToArray" << std::endl;
+	//}
+	//else if (expr->name == "remove") {
+	//	llvm::Value* arrayPtr = globals[expr->object->getName()]; // Get the array pointer
+	//	llvm::Value* currentSize = getCurrentSize(arrayPtr); // You need to manage size separately
+	//	removeLastElementFromArray(arrayPtr, currentSize);
+	//}
+	//else {
+	//	std::cout << "The object name is: " << expr->object->getName() << std::endl;
+	//	std::cerr << "Unsupported method call: " << expr->name << std::endl;
+	//}    
 }
 
 
@@ -1106,196 +1019,4 @@ llvm::Module* LLVMCodeGen::getModule() const {
 	 
  }
 
- llvm::Value* LLVMCodeGen::createDynamicArray(llvm::Type* elemType, size_t initialCapacity) {
-
-	 if (currentFunction && !currentFunction->getEntryBlock().empty()) {
-		 auto* terminator = currentFunction->getEntryBlock().getTerminator();
-		 if (terminator) {
-			 std::cout << "Terminator is present in createDynamicArray." << std::endl;
-			 llvm::IRBuilder<> builder(terminator);
-
-		 }
-		 else {
-			 std::cerr << "No terminator in entry block createDynamicArray." << std::endl;
-			 return nullptr; 
-		 }
-	 }
-	 else {
-		 std::cerr << "Invalid function context or missing entry block createDynamicArray." << std::endl;
-		 return nullptr;
-	 }
-	 llvm::IRBuilder<> builder(currentFunction->getEntryBlock().getTerminator());
-	 std::cout << "After creating IRBuilder" << std::endl;
-	 llvm::Value* elemSize = llvm::ConstantInt::get(context, llvm::APInt(32, module->getDataLayout().getTypeAllocSize(elemType)));
-	 std::cout << "After getting elemSize" << std::endl;
-	 llvm::Value* allocSize = builder.CreateMul(elemSize, llvm::ConstantInt::get(context, llvm::APInt(32, initialCapacity)), "allocSize");
-	 std::cout << "After getting allocSize" << std::endl;
-	 llvm::Value* arrayMem = builder.CreateCall(mallocFunction, allocSize, "arrayMem");
-	 std::cout << "After creating arrayMem" << std::endl;
-	 return builder.CreateBitCast(arrayMem, llvm::PointerType::getUnqual(elemType), "arrayPtr");
-	 //_______________________________________________________________________
-
-	 //std::cout << "Creating dynamic array in global scope" << std::endl;
-	 //llvm::IRBuilder<> builder(context);
-	 //std::cout << "After creating IRBuilder in createDynamicArray" << std::endl;
-	 //llvm::BasicBlock* tempBlock = llvm::BasicBlock::Create(context, "init", nullptr);
-	 //std::cout << "After creating tempBlock in createDynamicArray" << std::endl;
-	 //builder.SetInsertPoint(tempBlock);
-	 //std::cout << "After setting insert point in createDynamicArray" << std::endl;
-	 //llvm::Value* elemSize = llvm::ConstantInt::get(context, llvm::APInt(32, module->getDataLayout().getTypeAllocSize(elemType)));
-	 //std::cout << "After getting elemSize in createDynamicArray" << std::endl;
-	 //llvm::Value* allocSize = builder.CreateMul(elemSize, llvm::ConstantInt::get(context, llvm::APInt(32, initialCapacity)), "allocSize");
-	 //std::cout << "After getting allocSize in createDynamicArray" << std::endl;
-	 //llvm::Value* arrayMem = builder.CreateCall(mallocFunction, allocSize, "arrayMem");
-	 //std::cout << "After creating arrayMem in createDynamicArray" << std::endl;
-
-	 //// Cleanup: Remove the temporary block after use
-	 //tempBlock->eraseFromParent();
-	 //std::cout << "After erasing tempBlock in createDynamicArray" << std::endl;
-
-	 //return builder.CreateBitCast(arrayMem, llvm::PointerType::getUnqual(elemType), "arrayPtr");
-	 //______________________________________________________________________
-	 //std::cout << "Creating dynamic array in global scope" << std::endl;
-
-	 //// Create a dummy function to host the block if not already within a function
-	 //llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(context), false);
-	 //llvm::Function* dummyFunc = llvm::Function::Create(funcType, llvm::Function::InternalLinkage, "dummyFunc", module);
-	 //llvm::BasicBlock* tempBlock = llvm::BasicBlock::Create(context, "init", dummyFunc);
-
-	 //llvm::IRBuilder<> builder(tempBlock);
-	 //std::cout << "IRBuilder and tempBlock initialized." << std::endl;
-
-	 //llvm::Value* elemSize = llvm::ConstantInt::get(context, llvm::APInt(32, module->getDataLayout().getTypeAllocSize(elemType)));
-	 //llvm::Value* allocSize = builder.CreateMul(elemSize, llvm::ConstantInt::get(context, llvm::APInt(32, initialCapacity)), "allocSize");
-	 //llvm::Value* arrayMem = builder.CreateCall(mallocFunction, allocSize, "arrayMem");
-	 //std::cout << "Initialized sizes and allocated memory for array." << std::endl;
-	 //// Now you can safely use the temporary block, knowing it is properly contained.
-	 //llvm::Value* arrayPtr = builder.CreateBitCast(arrayMem, llvm::PointerType::getUnqual(elemType), "arrayPtr");
-	 //std::cout << "Bitcasted array memory to array pointer." << std::endl;
-	 //// Cleanup
-	 //tempBlock->eraseFromParent();  // Safe to remove now; all uses are complete
-	 //dummyFunc->eraseFromParent();  // Remove the dummy function as well
-	 //std::cout << "Erased temporary block and dummy function. Returning array pointer" << std::endl;
-	 //return arrayPtr;
-
- }
-
- llvm::Value* LLVMCodeGen::getCurrentSize(llvm::Value* arrayPtr) {
-	 //std::cout << "Getting current size of array" << std::endl;
-
-	 //if (currentFunction && !currentFunction->getEntryBlock().empty()) {
-		// auto* terminator = currentFunction->getEntryBlock().getTerminator();
-		// if (terminator) {
-		//	 std::cout << "Terminator is present in getCurrentSize." << std::endl;
-		//	 llvm::IRBuilder<> builder(terminator);
-		//	 
-		// }
-		// else {
-		//	 std::cerr << "No terminator in entry block getCurrentSize." << std::endl;
-		//	 return nullptr; // or handle this scenario more gracefully
-		// }
-	 //}
-	 //else {
-		// std::cerr << "Invalid function context or missing entry block getCurrentSize." << std::endl;
-		// return nullptr;
-	 //}
-	 //std::cout << "After creating IRBuilder in getCurrentSize." << std::endl;
-	 //// Adjusting for the actual type of size in your array structure
-	 //llvm::PointerType* sizePtrType = llvm::PointerType::get(llvm::Type::getInt32Ty(context), 0);
-	 //std::cout << "Pointer type for sizePtrType created." << std::endl;
-	 //llvm::Value* sizePtr = builder.CreatePointerCast(arrayPtr, sizePtrType, "sizePtrCast");
-	 //std::cout << "Pointer cast to size pointer completed." << std::endl;
-
-	 //// Load should match the type that sizePtr points to; assuming it is indeed int32
-	 //return builder.CreateLoad(llvm::Type::getInt32Ty(context), sizePtr, "currentSize");
-
-	 std::cout << "Getting current size of array" << std::endl;
-
-	 if (!currentFunction || currentFunction->getEntryBlock().empty()) {
-		 std::cerr << "Invalid function context or missing entry block in getCurrentSize." << std::endl;
-		 return nullptr;
-	 }
-
-	 // Ensure there is a terminator to attach the builder to
-	 llvm::Instruction* terminator = currentFunction->getEntryBlock().getTerminator();
-	 if (!terminator) {
-		 std::cerr << "No terminator in entry block of getCurrentSize." << std::endl;
-		 return nullptr; // Or handle this scenario more gracefully
-	 }
-
-	 llvm::IRBuilder<> builder(terminator);
-	 std::cout << "IRBuilder successfully created in getCurrentSize." << std::endl;
-
-	 // Adjusting for the actual type of size in your array structure
-	 llvm::PointerType* sizePtrType = llvm::PointerType::get(llvm::Type::getInt32Ty(context), 0);
-	 std::cout << "Pointer type for size pointer created." << std::endl;
-
-	 llvm::Value* sizePtr = builder.CreatePointerCast(arrayPtr, sizePtrType, "sizePtrCast");
-	 std::cout << "Pointer cast to size pointer completed." << std::endl;
-
-	 // Load should match the type that sizePtr points to; assuming it is indeed int32
-	 return builder.CreateLoad(llvm::Type::getInt32Ty(context), sizePtr, "currentSize");
-
- }
-
-
-llvm::Value* LLVMCodeGen::getCapacity(llvm::Value* arrayPtr) {
-	llvm::IRBuilder<> builder(currentFunction->getEntryBlock().getTerminator());
-	std::cout << "Getting capacity of array" << std::endl;
-	llvm::Type* intType = llvm::Type::getInt32Ty(context);  // Assuming the capacity is stored as an int
-	std::cout << "Created intType" << std::endl;
-	// Assuming arrayPtr points to a structure where capacity is the first element,
-	// and that the structure's type is properly set up in your LLVM context
-	std::vector<llvm::Value*> indices{
-		llvm::ConstantInt::get(intType, 0),  // index for the first element if it's a simple struct/array
-		llvm::ConstantInt::get(intType, 1)   // assuming capacity is at index 1
-	};
-	std::cout << "Created indices" << std::endl;
-
-	// Now using CreateGEP with the correct number of arguments
-	llvm::Value* capacityPtr = builder.CreateGEP(intType, arrayPtr, indices, "capacityPtr");
-	std::cout << "Created capacityPtr" << std::endl;
-	llvm::Value* capacity = builder.CreateLoad(intType, capacityPtr, "loadCapacity");
-	std::cout << "Created capacity" << std::endl;
-	 return builder.CreateLoad(llvm::Type::getInt64Ty(context), capacityPtr, "capacity");
- }
-
-
- void LLVMCodeGen::addElementToArray(llvm::Value* arrayPtr, llvm::Value* element, llvm::Value* currentSize, llvm::Value* capacity) {
-	 llvm::IRBuilder<> builder(currentFunction->getEntryBlock().getTerminator());
-
-	 // Check if resize is needed
-	 llvm::Value* needResize = builder.CreateICmpUGE(currentSize, capacity, "needResize");
-	 llvm::BasicBlock* resizeBlock = llvm::BasicBlock::Create(context, "resize", currentFunction);
-	 llvm::BasicBlock* continueBlock = llvm::BasicBlock::Create(context, "continue", currentFunction);
-	 builder.CreateCondBr(needResize, resizeBlock, continueBlock);
-
-	 // Resize the array
-	 builder.SetInsertPoint(resizeBlock);
-	 llvm::Value* newCapacity = builder.CreateMul(capacity, llvm::ConstantInt::get(context, llvm::APInt(32, 2)), "newCapacity");
-	 llvm::Value* newSize = builder.CreateMul(newCapacity, llvm::ConstantInt::get(context, llvm::APInt(32, module->getDataLayout().getTypeAllocSize(element->getType()))), "newSize");
-	 llvm::Value* newArrayMem = builder.CreateCall(reallocFunction, { arrayPtr, newSize }, "newArrayMem");
-	 llvm::Value* newArrayPtr = builder.CreateBitCast(newArrayMem, llvm::PointerType::getUnqual(element->getType()), "newArrayPtr");
-	 builder.CreateBr(continueBlock);
-
-	 // Continue adding element
-	 builder.SetInsertPoint(continueBlock);
-	 llvm::PHINode* finalArrayPtr = builder.CreatePHI(arrayPtr->getType(), 2, "finalArrayPtr");
-	 finalArrayPtr->addIncoming(arrayPtr, currentFunction->getEntryBlock().getTerminator()->getParent());
-	 finalArrayPtr->addIncoming(newArrayPtr, resizeBlock);
-
-	 // Add the element
-	 llvm::Value* index[] = { currentSize };
-	 llvm::Value* elemPtr = builder.CreateInBoundsGEP(element->getType(), finalArrayPtr, index);
-	 builder.CreateStore(element, elemPtr);
-
-	 // Update size
-	 llvm::Value* updatedSize = builder.CreateAdd(currentSize, llvm::ConstantInt::get(context, llvm::APInt(32, 1)), "updatedSize");
-	 builder.CreateStore(updatedSize, currentSize);
- }
-
- void LLVMCodeGen::removeLastElementFromArray(llvm::Value* arrayPtr, llvm::Value* currentSize) {
-	 llvm::IRBuilder<> builder(currentFunction->getEntryBlock().getTerminator());
-	 llvm::Value* updatedSize = builder.CreateSub(currentSize, llvm::ConstantInt::get(context, llvm::APInt(32, 1)), "updatedSize");
-	 builder.CreateStore(updatedSize, currentSize);
- }
+ 

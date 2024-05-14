@@ -1,7 +1,7 @@
 flt q = 12.9382023;
 flt r = 231231414.2;
 bool isDeclared = false;
-int x = 2;
+int x = 6;
 int y = 3;
 int p = 7;
 int Q = 9;
@@ -12,10 +12,11 @@ int cc = 10000000;
 str informalGreeting = "sup";
 str formalGreeting = "hello";
 int ARRAY numberList = {1,2,3,4,5,6,7,8,9,10};
+int ARRAY secondNumberList = {11,12,13,14,15,16,17,18,19,20};
 
 function returnValidString() -> int {
 	if (x equals 2){
-		loop range(1,2){
+		loop range(1,100000){
 			t = t + 1;
 			log(isDeclared);
 			log(q);

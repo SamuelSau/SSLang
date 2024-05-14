@@ -62,12 +62,7 @@ private:
     llvm::Function* reallocFunction; // External declaration for realloc
     llvm::Function* freeFunction;   // External declaration for free
     
-    llvm::Value* getCurrentSize(llvm::Value* arrayPtr);
-    llvm::Value* getCapacity(llvm::Value* arrayPtr);
     void initializeExternalFunctions();
 
-    llvm::Value* createDynamicArray(llvm::Type* elemType, size_t initialCapacity);
-    void addElementToArray(llvm::Value* arrayPtr, llvm::Value* element, llvm::Value* currentSize, llvm::Value* capacity);
-    void removeLastElementFromArray(llvm::Value* arrayPtr, llvm::Value* currentSize);
 };  
 #endif // LLVM_CODE_GEN_H

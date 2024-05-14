@@ -101,7 +101,8 @@ int main() {
     // Adjusted for testing entire files rather than line-by-line
 
     std::vector<std::string> testFiles = {
-        "tests/program_testing/test_programs.ssl"
+        "tests/program_testing/test_programs.ssl",
+		"tests/program_testing/practical_program.ssl"
     };
 
     for (const auto& filePath : testFiles) {

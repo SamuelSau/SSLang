@@ -274,7 +274,7 @@ class BinaryExpression : public Expression {
                 std::cout << "We are in the comparison or logical operation\n";
                 return "bool";
             }
-            else if (op == "+" || op == "-" || op == "*" || op == "/") {
+            else if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
                 // Arithmetic operations: return the type based on the operands
                 if (leftType == "int" && rightType == "int") {
                     return "int";
@@ -287,7 +287,7 @@ class BinaryExpression : public Expression {
                 }
             }
             else {
-                throw std::runtime_error("Unsupported binary operation: " + op);
+                throw std::runtime_error("Unsupported binary operation for getType(): " + op);
             }
         }
 
